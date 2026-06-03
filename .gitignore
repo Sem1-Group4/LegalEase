@@ -1,0 +1,29 @@
+# =========================================================
+#  .gitignore GỐC — chỉ commit CODE.
+#  Loại bỏ tài liệu hướng dẫn + file không liên quan tới code.
+#  (Mỗi app Laravel/React đã có .gitignore riêng cho vendor/,
+#   node_modules/, .env, dist/... nên ở đây không cần lặp lại.)
+# =========================================================
+
+# ----- Tài liệu / hướng dẫn (KHÔNG commit) -----
+*.pdf
+*.doc
+*.docx
+*.zip
+*.rar
+gen_docx.py
+HuongDan_*
+_csdl.txt
+_spec.txt
+_phancong.txt
+
+# ----- File tạm / hệ điều hành / editor -----
+__MACOSX/
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+
+
+# ----- CSDL SQLite tạm (dự án đã chuyển sang MySQL) -----
+*.sqlite

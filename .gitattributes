@@ -1,0 +1,12 @@
+# Chuẩn hóa xuống dòng cho cả nhóm (tránh khác biệt LF/CRLF giữa các máy).
+* text=auto eol=lf
+
+# File nhị phân — không đụng vào
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.svg text
+*.ico binary
+*.woff binary
+*.woff2 binary
