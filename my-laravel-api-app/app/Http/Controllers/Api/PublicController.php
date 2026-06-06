@@ -35,7 +35,7 @@ class PublicController extends Controller
     {
         $query = LawyerProfile::query()
             ->where('approval_status', 'approved')
-            ->with(['user:id,name', 'city:id,name', 'specializations:id,name'])
+            ->with(['user:id,name,phone', 'city:id,name', 'specializations:id,name'])
             ->withCount('reviews');
 
         if ($request->boolean('featured')) {
@@ -57,7 +57,9 @@ class PublicController extends Controller
         return $lawyers->map(fn ($l) => [
             'id' => $l->id,
             'name' => $l->user->name,
+            'phone' => $l->user->phone,
             'city' => $l->city?->name,
+            'office_address' => $l->office_address,
             'experience_years' => $l->experience_years,
             'consultation_fee' => $l->consultation_fee,
             'avatar' => $l->avatar,

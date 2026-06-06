@@ -138,9 +138,9 @@ class DatabaseSeeder extends Seeder
                 'bio' => 'Luật sư trẻ chuyên lĩnh vực gia đình và lao động.',
                 'office_address' => '456 Nguyễn Huệ, TP.HCM',
                 'consultation_fee' => 300000,
-                'is_verified' => false,
-                'is_featured' => false,
-                'approval_status' => 'pending',
+                'is_verified' => true,
+                'is_featured' => true,
+                'approval_status' => 'approved',
                 'rating_avg' => 0,
             ]
         );

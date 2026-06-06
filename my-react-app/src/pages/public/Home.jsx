@@ -1,6 +1,16 @@
-import PagePlaceholder from '../../components/common/PagePlaceholder'
+import HeroSearch from '../../components/home/HeroSearch'
+import SpecializationGrid from '../../components/home/SpecializationGrid'
+import FeaturedLawyers from '../../components/home/FeaturedLawyers'
+import SloganBand from '../../components/home/SloganBand'
 
-// Trang chủ — hero, thanh tìm kiếm, luật sư nổi bật, tin tức
+// Trang chủ — lắp ráp 4 section: Hero + tìm kiếm, Lĩnh vực, Luật sư nổi bật, Khẩu hiệu.
 export default function Home() {
-  return <PagePlaceholder title="Trang chủ" path="/trangchu" />
+  return (
+    <>
+      <HeroSearch />
+      <SpecializationGrid />
+      <FeaturedLawyers />
+      <SloganBand />
+    </>
+  )
 }
