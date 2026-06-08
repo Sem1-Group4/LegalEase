@@ -20,6 +20,7 @@ import ReviewForm from './pages/customer/ReviewForm'
 import Profile from './pages/customer/Profile'
 
 import NotFound from './pages/NotFound'
+import RequireAuth from './components/common/RequireAuth'
 
 function App() {
   return (
@@ -39,12 +40,12 @@ function App() {
         <Route path="/dang-nhap" element={<Login />} />
         <Route path="/dang-ky" element={<Register />} />
 
-        {/* Customer (khu vực khách hàng) */}
-        <Route path="/khach-hang" element={<CustomerDashboard />} />
-        <Route path="/khach-hang/dat-lich/:lawyerId" element={<Booking />} />
-        <Route path="/khach-hang/lich-hen" element={<MyAppointments />} />
-        <Route path="/khach-hang/danh-gia/:appointmentId" element={<ReviewForm />} />
-        <Route path="/khach-hang/ho-so" element={<Profile />} />
+        {/* Customer (khu vực khách hàng) — yêu cầu đăng nhập */}
+        <Route path="/khach-hang" element={<RequireAuth><CustomerDashboard /></RequireAuth>} />
+        <Route path="/khach-hang/dat-lich/:lawyerId" element={<RequireAuth><Booking /></RequireAuth>} />
+        <Route path="/khach-hang/lich-hen" element={<RequireAuth><MyAppointments /></RequireAuth>} />
+        <Route path="/khach-hang/danh-gia/:appointmentId" element={<RequireAuth><ReviewForm /></RequireAuth>} />
+        <Route path="/khach-hang/ho-so" element={<RequireAuth><Profile /></RequireAuth>} />
 
         {/* 404 */}
         <Route path="*" element={<NotFound />} />

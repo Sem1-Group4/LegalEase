@@ -1,4 +1,5 @@
-import { NavLink, Link } from 'react-router-dom'
+import { NavLink, Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 
 // Các mục menu Public
 const navItems = [
@@ -10,12 +11,20 @@ const navItems = [
 ]
 
 export default function Header() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
   const linkClass = ({ isActive }) =>
     `px-1 py-2 text-sm font-medium transition-colors ${
       isActive
         ? 'text-[var(--color-primary)] border-b-2 border-[var(--color-accent)]'
         : 'text-gray-600 hover:text-[var(--color-primary)]'
     }`
+
+  function handleLogout() {
+    logout()
+    navigate('/trangchu')
+  }
 
   return (
     <header className="sticky top-0 z-20 border-b border-gray-200 bg-white">
@@ -37,18 +46,37 @@ export default function Header() {
 
         {/* Khu vực tài khoản */}
         <div className="flex items-center gap-3">
-          <Link
-            to="/khach-hang"
-            className="hidden text-sm font-medium text-gray-600 hover:text-[var(--color-primary)] sm:inline"
-          >
-            Khu vực khách hàng
-          </Link>
-          <Link
-            to="/dang-nhap"
-            className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-gray-900 hover:brightness-95"
-          >
-            Đăng nhập
-          </Link>
+          {user ? (
+            <>
+              <Link
+                to="/khach-hang"
+                className="hidden text-sm font-medium text-gray-700 hover:text-[var(--color-primary)] sm:inline"
+              >
+                Xin chào, <span className="font-semibold">{user.name}</span>
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                Đăng xuất
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/dang-ky"
+                className="hidden text-sm font-medium text-gray-600 hover:text-[var(--color-primary)] sm:inline"
+              >
+                Đăng ký
+              </Link>
+              <Link
+                to="/dang-nhap"
+                className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-gray-900 hover:brightness-95"
+              >
+                Đăng nhập
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>
