@@ -5,6 +5,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Admin\LawyerController as AdminLawyerController;
+use App\Http\Controllers\Api\Admin\CustomerController as AdminCustomerController;
+use App\Http\Controllers\Api\Admin\ReportController as AdminReportController;
+use App\Http\Controllers\Api\Admin\AnnouncementController as AdminAnnouncementController;
+use App\Http\Controllers\Api\Admin\SiteContentController as AdminSiteContentController;
 
 // ---------- API công khai (không cần đăng nhập) ----------
 Route::get('/cities', [PublicController::class, 'cities']);
@@ -31,4 +35,17 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::patch('/lawyers/{lawyer}/approve', [AdminLawyerController::class, 'approve']);
     Route::patch('/lawyers/{lawyer}/reject', [AdminLawyerController::class, 'reject']);
     Route::patch('/lawyers/{lawyer}/toggle-active', [AdminLawyerController::class, 'toggleActive']);
+    Route::get('/customers', [AdminCustomerController::class, 'index']);
+    Route::get('/customers/{customer}', [AdminCustomerController::class, 'show']);
+    Route::patch('/customers/{customer}/toggle-active', [AdminCustomerController::class, 'toggleActive']);
+    Route::delete('/customers/{customer}', [AdminCustomerController::class, 'destroy']);
+    Route::get('/reports/overview', [AdminReportController::class, 'overview']);
+    Route::get('/reports/lawyers-by-city', [AdminReportController::class, 'lawyersByCity']);
+        Route::get('/announcements', [AdminAnnouncementController::class, 'index']);
+    Route::get('/announcements/{announcement}', [AdminAnnouncementController::class, 'show']);
+    Route::post('/announcements', [AdminAnnouncementController::class, 'store']);
+    Route::put('/announcements/{announcement}', [AdminAnnouncementController::class, 'update']);
+    Route::delete('/announcements/{announcement}', [AdminAnnouncementController::class, 'destroy']);
+    Route::get('/site-contents', [AdminSiteContentController::class, 'index']);
+    Route::put('/site-contents/{key}', [AdminSiteContentController::class, 'upsert']);
 });
