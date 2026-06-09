@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\Admin\AnnouncementController as AdminAnnouncementCo
 use App\Http\Controllers\Api\Admin\SiteContentController as AdminSiteContentController;
 use App\Http\Controllers\Api\Lawyer\DashboardController as LawyerDashboardController;
 use App\Http\Controllers\Api\Lawyer\ProfileController as LawyerProfileController;
+use App\Http\Controllers\Api\Lawyer\AvailabilityController as LawyerAvailabilityController;
 
 // ---------- API công khai (không cần đăng nhập) ----------
 Route::get('/cities', [PublicController::class, 'cities']);
@@ -56,4 +57,9 @@ Route::middleware(['auth:sanctum', 'role:lawyer'])->prefix('lawyer')->group(func
     Route::get('/dashboard', [LawyerDashboardController::class, 'index']);
     Route::get('/profile', [LawyerProfileController::class, 'show']);
     Route::put('/profile', [LawyerProfileController::class, 'update']);
+    Route::get('/availabilities/slots', [LawyerAvailabilityController::class, 'availableSlots']); // THÊM DÒNG NÀY - đặt TRƯỚC {availability}
+    Route::get('/availabilities', [LawyerAvailabilityController::class, 'index']);
+    Route::post('/availabilities', [LawyerAvailabilityController::class, 'store']);
+    Route::put('/availabilities/{availability}', [LawyerAvailabilityController::class, 'update']);
+    Route::delete('/availabilities/{availability}', [LawyerAvailabilityController::class, 'destroy']);
 });
