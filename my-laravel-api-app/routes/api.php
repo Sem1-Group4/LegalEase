@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\Admin\SiteContentController as AdminSiteContentCont
 use App\Http\Controllers\Api\Lawyer\DashboardController as LawyerDashboardController;
 use App\Http\Controllers\Api\Lawyer\ProfileController as LawyerProfileController;
 use App\Http\Controllers\Api\Lawyer\AvailabilityController as LawyerAvailabilityController;
+use App\Http\Controllers\Api\Admin\AppointmentController as AdminAppointmentController;
 
 // ---------- API công khai (không cần đăng nhập) ----------
 Route::get('/cities', [PublicController::class, 'cities']);
@@ -51,6 +52,9 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::delete('/announcements/{announcement}', [AdminAnnouncementController::class, 'destroy']);
     Route::get('/site-contents', [AdminSiteContentController::class, 'index']);
     Route::put('/site-contents/{key}', [AdminSiteContentController::class, 'upsert']);
+    Route::get('/appointments', [AdminAppointmentController::class, 'index']);
+    Route::get('/appointments/{appointment}', [AdminAppointmentController::class, 'show']);
+    Route::patch('/appointments/{appointment}/cancel', [AdminAppointmentController::class, 'cancel']);
 });
 // ---------- Khu vực LAWYER ----------
 Route::middleware(['auth:sanctum', 'role:lawyer'])->prefix('lawyer')->group(function () {
