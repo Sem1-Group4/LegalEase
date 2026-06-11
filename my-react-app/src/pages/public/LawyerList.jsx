@@ -1,22 +1,51 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import api from '../../api/axios'
 import LawyerCard from '../../components/common/LawyerCard'
 import Pagination from '../../components/common/Pagination'
 import EmptyState from '../../components/common/EmptyState'
-import { cities, specializations, searchLawyers } from '../../mock/data'
 
 const PER_PAGE = 6
 
-// Tìm kiếm / Danh sách luật sư — lọc theo tỉnh + lĩnh vực, sắp xếp, phân trang.
+// Tìm kiếm / Danh sách luật sư — lọc theo tỉnh + lĩnh vực (gọi API), tìm theo tên + sắp xếp + phân trang (client).
 export default function LawyerList() {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  // Khởi tạo bộ lọc từ query string (đến từ thanh tìm kiếm trang chủ).
+  // Danh mục dropdown (lấy từ API).
+  const [cities, setCities] = useState([])
+  const [specializations, setSpecializations] = useState([])
+
+  // Bộ lọc khởi tạo từ query string (đến từ thanh tìm kiếm trang chủ).
   const [cityId, setCityId] = useState(searchParams.get('city_id') || '')
   const [specId, setSpecId] = useState(searchParams.get('specialization_id') || '')
   const [keyword, setKeyword] = useState('')
   const [sort, setSort] = useState('')
   const [page, setPage] = useState(1)
+
+  // Kết quả luật sư từ API.
+  const [lawyers, setLawyers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  // Tải danh mục 1 lần.
+  useEffect(() => {
+    api.get('/cities').then((res) => setCities(res.data)).catch(() => {})
+    api.get('/specializations').then((res) => setSpecializations(res.data)).catch(() => {})
+  }, [])
+
+  // Tải luật sư mỗi khi đổi tỉnh / lĩnh vực (lấy tối đa 100 rồi lọc tên + sắp xếp ở client).
+  useEffect(() => {
+    setLoading(true)
+    setError('')
+    const params = { per_page: 100 }
+    if (cityId) params.city_id = cityId
+    if (specId) params.specialization_id = specId
+    api
+      .get('/lawyers', { params })
+      .then((res) => setLawyers(res.data.data || []))
+      .catch(() => setError('Không tải được danh sách luật sư.'))
+      .finally(() => setLoading(false))
+  }, [cityId, specId])
 
   // Đổi bộ lọc tỉnh/lĩnh vực: cập nhật state, đồng bộ URL (chia sẻ được) và về trang 1.
   function applyFilter(nextCity, nextSpec) {
@@ -29,10 +58,21 @@ export default function LawyerList() {
     setSearchParams(p, { replace: true })
   }
 
-  const results = useMemo(
-    () => searchLawyers({ cityId, specId, keyword, sort }),
-    [cityId, specId, keyword, sort],
-  )
+  // Lọc theo tên + sắp xếp ở client (để tìm kiếm tức thời, không gọi lại API mỗi phím).
+  const results = useMemo(() => {
+    let list = [...lawyers]
+    if (keyword) {
+      const kw = keyword.toLowerCase()
+      list = list.filter(
+        (l) => l.name?.toLowerCase().includes(kw) || l.bio?.toLowerCase().includes(kw),
+      )
+    }
+    if (sort === 'rating') list.sort((a, b) => b.rating_avg - a.rating_avg)
+    else if (sort === 'experience') list.sort((a, b) => b.experience_years - a.experience_years)
+    else if (sort === 'fee_asc') list.sort((a, b) => a.consultation_fee - b.consultation_fee)
+    else if (sort === 'fee_desc') list.sort((a, b) => b.consultation_fee - a.consultation_fee)
+    return list
+  }, [lawyers, keyword, sort])
 
   const totalPages = Math.ceil(results.length / PER_PAGE)
   const pageItems = results.slice((page - 1) * PER_PAGE, page * PER_PAGE)
@@ -90,20 +130,28 @@ export default function LawyerList() {
       </div>
 
       {/* Kết quả */}
-      <p className="mt-6 text-sm text-gray-500">Tìm thấy {results.length} luật sư.</p>
-
-      {results.length === 0 ? (
-        <div className="mt-4">
-          <EmptyState title="Không tìm thấy luật sư phù hợp" description="Thử bỏ bớt bộ lọc hoặc đổi từ khóa tìm kiếm." icon="🔍" />
-        </div>
+      {loading ? (
+        <p className="mt-6 text-gray-500">Đang tải…</p>
+      ) : error ? (
+        <p className="mt-6 text-red-600">{error}</p>
       ) : (
         <>
-          <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {pageItems.map((l) => (
-              <LawyerCard key={l.id} lawyer={l} />
-            ))}
-          </div>
-          <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+          <p className="mt-6 text-sm text-gray-500">Tìm thấy {results.length} luật sư.</p>
+
+          {results.length === 0 ? (
+            <div className="mt-4">
+              <EmptyState title="Không tìm thấy luật sư phù hợp" description="Thử bỏ bớt bộ lọc hoặc đổi từ khóa tìm kiếm." icon="🔍" />
+            </div>
+          ) : (
+            <>
+              <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {pageItems.map((l) => (
+                  <LawyerCard key={l.id} lawyer={l} />
+                ))}
+              </div>
+              <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+            </>
+          )}
         </>
       )}
     </div>

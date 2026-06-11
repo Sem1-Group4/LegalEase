@@ -1,14 +1,31 @@
+import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import api from '../../api/axios'
 import StarRating from '../../components/common/StarRating'
 import EmptyState from '../../components/common/EmptyState'
-import { getLawyerById, getReviewsByLawyer, getAvailability } from '../../mock/data'
 
-// Chi tiết hồ sơ luật sư — thông tin, lĩnh vực, đánh giá, lịch trống, nút đặt lịch.
+// Chi tiết hồ sơ luật sư — thông tin, lĩnh vực, đánh giá, nút đặt lịch.
 export default function LawyerDetail() {
   const { id } = useParams()
-  const lawyer = getLawyerById(id)
+  const [lawyer, setLawyer] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
 
-  if (!lawyer) {
+  useEffect(() => {
+    setLoading(true)
+    setNotFound(false)
+    api
+      .get(`/lawyers/${id}`)
+      .then((res) => setLawyer(res.data))
+      .catch(() => setNotFound(true))
+      .finally(() => setLoading(false))
+  }, [id])
+
+  if (loading) {
+    return <div className="mx-auto max-w-5xl px-4 py-16 text-gray-500">Đang tải…</div>
+  }
+
+  if (notFound || !lawyer) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16">
         <EmptyState title="Không tìm thấy luật sư" description="Hồ sơ bạn tìm không tồn tại." icon="❓" />
@@ -19,8 +36,7 @@ export default function LawyerDetail() {
     )
   }
 
-  const reviews = getReviewsByLawyer(id)
-  const slots = getAvailability(id)
+  const reviews = lawyer.recent_reviews || []
   const initial = lawyer.name?.charAt(0)?.toUpperCase() ?? '?'
   const fee = lawyer.consultation_fee
     ? new Intl.NumberFormat('vi-VN').format(lawyer.consultation_fee) + 'đ'
@@ -45,13 +61,13 @@ export default function LawyerDetail() {
             <span className="text-gray-500">{lawyer.rating_avg} · {lawyer.reviews_count} nhận xét</span>
           </div>
           <div className="mt-3 grid gap-1 text-sm text-gray-600 sm:grid-cols-2">
-            <p>📍 {lawyer.city}</p>
-            <p>📞 {lawyer.phone}</p>
+            <p>📍 {lawyer.city || '—'}</p>
+            <p>📞 {lawyer.phone || '—'}</p>
             <p>💼 {lawyer.experience_years} năm kinh nghiệm</p>
             <p>💰 Phí tư vấn: <span className="font-semibold text-[var(--color-primary)]">{fee}/buổi</span></p>
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
-            {lawyer.specializations.map((s) => (
+            {lawyer.specializations?.map((s) => (
               <span key={s} className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-[var(--color-primary)]">
                 {s}
               </span>
@@ -73,11 +89,11 @@ export default function LawyerDetail() {
         <div className="space-y-6 lg:col-span-2">
           <section className="rounded-xl border border-gray-200 bg-white p-6">
             <h2 className="font-bold text-gray-800">Giới thiệu</h2>
-            <p className="mt-2 text-sm leading-relaxed text-gray-600">{lawyer.bio}</p>
+            <p className="mt-2 text-sm leading-relaxed text-gray-600">{lawyer.bio || 'Chưa có thông tin giới thiệu.'}</p>
           </section>
 
           <section className="rounded-xl border border-gray-200 bg-white p-6">
-            <h2 className="font-bold text-gray-800">Đánh giá từ khách hàng ({reviews.length})</h2>
+            <h2 className="font-bold text-gray-800">Đánh giá từ khách hàng ({lawyer.reviews_count})</h2>
             {reviews.length === 0 ? (
               <p className="mt-3 text-sm text-gray-400">Chưa có đánh giá nào.</p>
             ) : (
@@ -85,8 +101,8 @@ export default function LawyerDetail() {
                 {reviews.map((r) => (
                   <li key={r.id} className="border-b border-gray-100 pb-4 last:border-0">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-gray-700">{r.customer_name}</span>
-                      <span className="text-xs text-gray-400">{r.created_at}</span>
+                      <span className="font-medium text-gray-700">{r.customer || 'Khách hàng'}</span>
+                      <span className="text-xs text-gray-400">{r.created_at?.slice(0, 10)}</span>
                     </div>
                     <StarRating value={r.rating} size="text-sm" />
                     <p className="mt-1 text-sm text-gray-600">{r.comment}</p>
@@ -97,27 +113,12 @@ export default function LawyerDetail() {
           </section>
         </div>
 
-        {/* Cột phải: lịch trống */}
+        {/* Cột phải: đặt lịch */}
         <aside className="rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="font-bold text-gray-800">Lịch trống gần nhất</h2>
-          {slots.length === 0 ? (
-            <p className="mt-3 text-sm text-gray-400">Hiện chưa có khung giờ trống.</p>
-          ) : (
-            <div className="mt-4 space-y-3">
-              {slots.map((d) => (
-                <div key={d.date}>
-                  <p className="text-sm font-medium text-gray-700">{d.date}</p>
-                  <div className="mt-1 flex flex-wrap gap-1.5">
-                    {d.slots.map((t) => (
-                      <span key={t} className="rounded border border-gray-200 px-2 py-1 text-xs text-gray-600">
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <h2 className="font-bold text-gray-800">Đặt lịch tư vấn</h2>
+          <p className="mt-3 text-sm text-gray-500">
+            Chọn ngày bạn muốn tư vấn để xem các khung giờ còn trống của luật sư, sau đó xác nhận đặt lịch.
+          </p>
           <Link
             to={`/khach-hang/dat-lich/${lawyer.id}`}
             className="mt-4 block rounded-md border border-[var(--color-primary)] px-4 py-2 text-center text-sm font-semibold text-[var(--color-primary)] hover:bg-blue-50"
