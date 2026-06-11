@@ -31,6 +31,11 @@ import AdminAppointmentMonitor from "./pages/admin/AppointmentMonitor";
 import AdminContentManage from "./pages/admin/ContentManage";
 import AdminReports from "./pages/admin/Reports";
 
+//----Trang Lawyer-------
+import LawyerLayout from "./components/layout/LawyerLayout";
+import LawyerDashboard from "./pages/lawyer/Dashboard";
+import LawyerProfile from "./pages/lawyer/Profile";
+
 function App() {
   return (
     <Routes>
@@ -109,6 +114,18 @@ function App() {
         <Route path="/admin/lich-hen" element={<AdminAppointmentMonitor />} />
         <Route path="/admin/noi-dung" element={<AdminContentManage />} />
         <Route path="/admin/bao-cao" element={<AdminReports />} />
+      </Route>
+
+      {/* Khu lawyer - layout riêng */}
+      <Route
+        element={
+          <RequireAuth role="lawyer">
+            <LawyerLayout />
+          </RequireAuth>
+        }
+      >
+        <Route path="/lawyer" element={<LawyerDashboard />} />
+        <Route path="/lawyer/ho-so" element={<LawyerProfile />} />
       </Route>
     </Routes>
   );
