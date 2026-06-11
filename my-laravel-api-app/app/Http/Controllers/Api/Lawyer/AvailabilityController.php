@@ -4,9 +4,8 @@ namespace App\Http\Controllers\Api\Lawyer;
 
 use App\Http\Controllers\Controller;
 use App\Models\LawyerAvailability;
-use App\Models\Appointment;
+use App\Services\AvailabilityService;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 
 /**
@@ -143,7 +142,7 @@ class AvailabilityController extends Controller
      * = các khoảng rảnh, sau khi khoét đi những đoạn đã có cuộc hẹn,
      *   và gộp các khoảng chồng nhau.
      */
-    public function availableSlots(Request $request)
+    public function availableSlots(Request $request, AvailabilityService $availability)
     {
         $profile = $request->user()->lawyerProfile;
         if (! $profile) {
@@ -155,116 +154,10 @@ class AvailabilityController extends Controller
         ]);
 
         $date = Carbon::parse($data['date'])->startOfDay();
-        $dateStr = $date->toDateString();
-
-        // 1) Các khoảng rảnh áp dụng cho ngày này (status = available)
-        $ranges = $profile->availabilities()
-            ->where('status', 'available')
-            ->where(function ($q) use ($dateStr) {
-                $q->whereDate('available_date', $dateStr)
-                  ->orWhere(function ($q2) use ($dateStr) {
-                      $q2->whereNull('available_date')
-                         ->whereDate('repeat_from', '<=', $dateStr)
-                         ->whereDate('repeat_to', '>=', $dateStr);
-                  });
-            })
-            ->get(['start_time', 'end_time']);
-
-        if ($ranges->isEmpty()) {
-            return ['date' => $dateStr, 'free_ranges' => []];
-        }
-
-        // 2) Các đoạn đã bị đặt (cuộc hẹn chưa hủy)
-        $busy = Appointment::where('lawyer_profile_id', $profile->id)
-            ->whereDate('appointment_date', $dateStr)
-            ->whereIn('status', ['pending', 'confirmed'])
-            ->get(['start_time', 'end_time'])
-            ->map(fn ($a) => [
-                'start' => $this->toMinutes($a->start_time),
-                'end'   => $this->toMinutes($a->end_time),
-            ])
-            ->sortBy('start')
-            ->values()
-            ->all();
-
-        // 3) Khoét các đoạn busy ra khỏi mỗi khoảng rảnh
-        $freeRanges = [];
-        foreach ($ranges as $range) {
-            $rStart = $this->toMinutes($range->start_time);
-            $rEnd   = $this->toMinutes($range->end_time);
-
-            $cursor = $rStart;
-            foreach ($busy as $b) {
-                if ($b['end'] <= $rStart || $b['start'] >= $rEnd) {
-                    continue;
-                }
-                if ($b['start'] > $cursor) {
-                    $freeRanges[] = ['start' => $cursor, 'end' => min($b['start'], $rEnd)];
-                }
-                $cursor = max($cursor, $b['end']);
-            }
-            if ($cursor < $rEnd) {
-                $freeRanges[] = ['start' => $cursor, 'end' => $rEnd];
-            }
-        }
-
-        // 4) Nếu là hôm nay: cắt bỏ phần đã qua giờ hiện tại
-        if ($date->isToday()) {
-            $nowMin = (int) (now()->hour * 60 + now()->minute);
-            $freeRanges = array_filter($freeRanges, fn ($r) => $r['end'] > $nowMin);
-            $freeRanges = array_map(function ($r) use ($nowMin) {
-                $r['start'] = max($r['start'], $nowMin);
-                return $r;
-            }, $freeRanges);
-        }
-
-        // 5) Gộp khoảng chồng nhau, rồi đổi về "HH:MM"
-        $freeRanges = array_values(array_filter($freeRanges, fn ($r) => $r['end'] > $r['start']));
-        $freeRanges = $this->mergeRanges($freeRanges);
-
-        $result = collect($freeRanges)
-            ->map(fn ($r) => [
-                'start' => $this->fromMinutes($r['start']),
-                'end'   => $this->fromMinutes($r['end']),
-            ])
-            ->values();
 
         return [
-            'date'        => $dateStr,
-            'free_ranges' => $result,
+            'date'        => $date->toDateString(),
+            'free_ranges' => $availability->freeRangesFormatted($profile, $date),
         ];
-    }
-
-    /** Gộp các khoảng [start,end] (phút) bị chồng/liền nhau thành khoảng lớn. */
-    private function mergeRanges(array $ranges): array
-    {
-        if (empty($ranges)) return [];
-
-        usort($ranges, fn ($a, $b) => $a['start'] <=> $b['start']);
-
-        $merged = [array_shift($ranges)];
-        foreach ($ranges as $r) {
-            $last = &$merged[count($merged) - 1];
-            if ($r['start'] <= $last['end']) {
-                $last['end'] = max($last['end'], $r['end']);
-            } else {
-                $merged[] = $r;
-            }
-            unset($last);
-        }
-        return $merged;
-    }
-
-    /** Đổi "HH:MM:SS" hoặc "HH:MM" -> số phút từ 0h. */
-    private function toMinutes(string $time): int
-    {
-        [$h, $m] = array_pad(explode(':', $time), 2, 0);
-        return (int) $h * 60 + (int) $m;
-    }
-
-    /** Đổi số phút -> "HH:MM". */
-    private function fromMinutes(int $minutes): string
-    {
-        return sprintf('%02d:%02d', intdiv($minutes, 60), $minutes % 60);
     }
 }

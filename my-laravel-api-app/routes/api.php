@@ -13,11 +13,19 @@ use App\Http\Controllers\Api\Lawyer\DashboardController as LawyerDashboardContro
 use App\Http\Controllers\Api\Lawyer\ProfileController as LawyerProfileController;
 use App\Http\Controllers\Api\Lawyer\AvailabilityController as LawyerAvailabilityController;
 use App\Http\Controllers\Api\Admin\AppointmentController as AdminAppointmentController;
+use App\Http\Controllers\Api\Customer\AppointmentController as CustomerAppointmentController;
+use App\Http\Controllers\Api\Customer\NotificationController as CustomerNotificationController;
+use App\Http\Controllers\Api\Customer\ProfileController as CustomerProfileController;
 
 // ---------- API công khai (không cần đăng nhập) ----------
 Route::get('/cities', [PublicController::class, 'cities']);
 Route::get('/specializations', [PublicController::class, 'specializations']);
 Route::get('/lawyers', [PublicController::class, 'lawyers']);
+Route::get('/lawyers/{lawyer}', [PublicController::class, 'show']);
+Route::get('/lawyers/{lawyer}/slots', [PublicController::class, 'slots']);
+Route::get('/lawyers/{lawyer}/reviews', [PublicController::class, 'reviews']);
+Route::get('/announcements', [PublicController::class, 'news']);
+Route::get('/announcements/{announcement}', [PublicController::class, 'newsDetail']);
 
 // ---------- API cần đăng nhập (Sanctum) ----------
 Route::get('/user', function (Request $request) {
@@ -66,4 +74,22 @@ Route::middleware(['auth:sanctum', 'role:lawyer'])->prefix('lawyer')->group(func
     Route::post('/availabilities', [LawyerAvailabilityController::class, 'store']);
     Route::put('/availabilities/{availability}', [LawyerAvailabilityController::class, 'update']);
     Route::delete('/availabilities/{availability}', [LawyerAvailabilityController::class, 'destroy']);
+});
+
+// ---------- Khu vực CUSTOMER ----------
+Route::middleware(['auth:sanctum', 'role:customer'])->prefix('customer')->group(function () {
+    // Lịch hẹn
+    Route::get('/appointments', [CustomerAppointmentController::class, 'index']);
+    Route::post('/appointments', [CustomerAppointmentController::class, 'store']);
+    Route::patch('/appointments/{appointment}/cancel', [CustomerAppointmentController::class, 'cancel']);
+    Route::post('/appointments/{appointment}/review', [CustomerAppointmentController::class, 'review']);
+
+    // Thông báo
+    Route::get('/notifications', [CustomerNotificationController::class, 'index']);
+    Route::patch('/notifications/read-all', [CustomerNotificationController::class, 'markAllRead']); // đặt TRƯỚC {notification}
+    Route::patch('/notifications/{notification}/read', [CustomerNotificationController::class, 'markRead']);
+
+    // Hồ sơ cá nhân
+    Route::get('/profile', [CustomerProfileController::class, 'show']);
+    Route::put('/profile', [CustomerProfileController::class, 'update']);
 });

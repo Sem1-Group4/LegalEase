@@ -1,8 +1,15 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { specializations } from '../../mock/data'
+import api from '../../api/axios'
 
 // Lưới các lĩnh vực pháp lý; bấm vào -> trang tìm luật sư đã lọc theo lĩnh vực.
 export default function SpecializationGrid() {
+  const [specializations, setSpecializations] = useState([])
+
+  useEffect(() => {
+    api.get('/specializations').then((res) => setSpecializations(res.data)).catch(() => {})
+  }, [])
+
   return (
     <section className="mx-auto max-w-6xl px-4 py-12">
       <h2 className="text-center text-2xl font-bold text-[var(--color-primary)]">Lĩnh vực pháp lý</h2>

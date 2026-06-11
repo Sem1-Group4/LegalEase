@@ -1,9 +1,17 @@
+import { useEffect, useState } from 'react'
+import api from '../../api/axios'
 import LawyerCard from '../common/LawyerCard'
-import { lawyers } from '../../mock/data'
 
-// Lưới luật sư nổi bật trên trang chủ (dùng dữ liệu mẫu).
+// Lưới luật sư nổi bật trên trang chủ (lấy từ API: lawyers?featured=1).
 export default function FeaturedLawyers() {
-  const featured = lawyers.filter((l) => l.featured)
+  const [featured, setFeatured] = useState([])
+
+  useEffect(() => {
+    api
+      .get('/lawyers', { params: { featured: 1 } })
+      .then((res) => setFeatured(res.data.data || []))
+      .catch(() => setFeatured([]))
+  }, [])
 
   return (
     <section className="bg-gray-50 py-12">

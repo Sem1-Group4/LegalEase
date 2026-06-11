@@ -1,12 +1,19 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { cities, specializations } from '../../mock/data'
+import api from '../../api/axios'
 
-// Banner trang chủ + thanh tìm kiếm (tỉnh thành + lĩnh vực) — dùng dữ liệu mẫu.
+// Banner trang chủ + thanh tìm kiếm (tỉnh thành + lĩnh vực) — lấy danh mục từ API.
 export default function HeroSearch() {
   const navigate = useNavigate()
   const [cityId, setCityId] = useState('')
   const [specId, setSpecId] = useState('')
+  const [cities, setCities] = useState([])
+  const [specializations, setSpecializations] = useState([])
+
+  useEffect(() => {
+    api.get('/cities').then((res) => setCities(res.data)).catch(() => {})
+    api.get('/specializations').then((res) => setSpecializations(res.data)).catch(() => {})
+  }, [])
 
   function handleSearch(e) {
     e.preventDefault()
