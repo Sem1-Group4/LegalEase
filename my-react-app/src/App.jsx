@@ -24,6 +24,7 @@ import RequireAuth from "./components/common/RequireAuth";
 import AdminLayout from "./components/layout/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminLawyerManage from "./pages/admin/LawyerManage";
+import AdminCustomerManage from "./pages/admin/CustomerManage";
 
 function App() {
   return (
@@ -99,6 +100,7 @@ function App() {
       >
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/luat-su" element={<AdminLawyerManage />} />
+        <Route path="/admin/khach-hang" element={<AdminCustomerManage />} />
       </Route>
     </Routes>
   );
