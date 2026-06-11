@@ -35,6 +35,7 @@ import AdminReports from "./pages/admin/Reports";
 import LawyerLayout from "./components/layout/LawyerLayout";
 import LawyerDashboard from "./pages/lawyer/Dashboard";
 import LawyerProfile from "./pages/lawyer/Profile";
+import LawyerAvailability from "./pages/lawyer/Availability";
 
 function App() {
   return (
@@ -126,6 +127,7 @@ function App() {
       >
         <Route path="/lawyer" element={<LawyerDashboard />} />
         <Route path="/lawyer/ho-so" element={<LawyerProfile />} />
+        <Route path="/lawyer/khung-gio" element={<LawyerAvailability />} />
       </Route>
     </Routes>
   );
