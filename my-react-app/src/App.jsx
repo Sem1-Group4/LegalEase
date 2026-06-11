@@ -36,6 +36,7 @@ import LawyerLayout from "./components/layout/LawyerLayout";
 import LawyerDashboard from "./pages/lawyer/Dashboard";
 import LawyerProfile from "./pages/lawyer/Profile";
 import LawyerAvailability from "./pages/lawyer/Availability";
+import LawyerAppointments from "./pages/lawyer/Appointments";
 
 function App() {
   return (
@@ -128,6 +129,7 @@ function App() {
         <Route path="/lawyer" element={<LawyerDashboard />} />
         <Route path="/lawyer/ho-so" element={<LawyerProfile />} />
         <Route path="/lawyer/khung-gio" element={<LawyerAvailability />} />
+        <Route path="/lawyer/lich-hen" element={<LawyerAppointments />} />
       </Route>
     </Routes>
   );
