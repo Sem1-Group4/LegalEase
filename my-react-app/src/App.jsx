@@ -23,6 +23,7 @@ import NotFound from "./pages/NotFound";
 import RequireAuth from "./components/common/RequireAuth";
 import AdminLayout from "./components/layout/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
+import AdminLawyerManage from "./pages/admin/LawyerManage";
 
 function App() {
   return (
@@ -97,6 +98,7 @@ function App() {
         }
       >
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/luat-su" element={<AdminLawyerManage />} />
       </Route>
     </Routes>
   );
