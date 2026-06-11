@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('lawyer_profiles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->unique()->constrained('users')->cascadeOnDelete(); // 1-1 với tài khoản
-            $table->foreignId('city_id')->constrained('cities')->restrictOnDelete();          // Vị trí làm việc
+            $table->foreignId('city_id')->nullable()->constrained('cities')->restrictOnDelete(); // Vị trí làm việc (khai sau khi duyệt)
             $table->string('license_number', 50)->nullable();   // Số thẻ hành nghề luật sư
             $table->unsignedSmallInteger('experience_years')->default(0); // Số năm kinh nghiệm
             $table->text('bio')->nullable();                    // Giới thiệu bản thân
