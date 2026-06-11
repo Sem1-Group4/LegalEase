@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Lawyer\DashboardController as LawyerDashboardContro
 use App\Http\Controllers\Api\Lawyer\ProfileController as LawyerProfileController;
 use App\Http\Controllers\Api\Lawyer\AvailabilityController as LawyerAvailabilityController;
 use App\Http\Controllers\Api\Admin\AppointmentController as AdminAppointmentController;
+use App\Http\Controllers\Api\Lawyer\AppointmentController as LawyerAppointmentController;
 
 // ---------- API công khai (không cần đăng nhập) ----------
 Route::get('/cities', [PublicController::class, 'cities']);
@@ -45,7 +46,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::delete('/customers/{customer}', [AdminCustomerController::class, 'destroy']);
     Route::get('/reports/overview', [AdminReportController::class, 'overview']);
     Route::get('/reports/lawyers-by-city', [AdminReportController::class, 'lawyersByCity']);
-        Route::get('/announcements', [AdminAnnouncementController::class, 'index']);
+    Route::get('/announcements', [AdminAnnouncementController::class, 'index']);
     Route::get('/announcements/{announcement}', [AdminAnnouncementController::class, 'show']);
     Route::post('/announcements', [AdminAnnouncementController::class, 'store']);
     Route::put('/announcements/{announcement}', [AdminAnnouncementController::class, 'update']);
@@ -66,4 +67,9 @@ Route::middleware(['auth:sanctum', 'role:lawyer'])->prefix('lawyer')->group(func
     Route::post('/availabilities', [LawyerAvailabilityController::class, 'store']);
     Route::put('/availabilities/{availability}', [LawyerAvailabilityController::class, 'update']);
     Route::delete('/availabilities/{availability}', [LawyerAvailabilityController::class, 'destroy']);
+    // Lịch hẹn của luật sư
+    Route::get('/appointments', [LawyerAppointmentController::class, 'index']);
+    Route::patch('/appointments/{appointment}/confirm', [LawyerAppointmentController::class, 'confirm']);
+    Route::patch('/appointments/{appointment}/complete', [LawyerAppointmentController::class, 'complete']);
+    Route::patch('/appointments/{appointment}/cancel', [LawyerAppointmentController::class, 'cancel']);
 });
