@@ -46,7 +46,7 @@ export default function LawyerAppointments() {
   }, [tab]);
 
   // Xác nhận lịch: pending -> confirmed
-  async function confirm(id) {
+  async function confirmAppt(id) {
     try {
       await api.patch(`/lawyer/appointments/${id}/confirm`);
       load();
@@ -57,7 +57,7 @@ export default function LawyerAppointments() {
 
   // Hoàn thành lịch: confirmed -> completed
   async function complete(id) {
-    if (!confirm("Đánh dấu lịch này đã hoàn thành?")) return;
+    if (!window.confirm("Đánh dấu lịch này đã hoàn thành?")) return;
     try {
       await api.patch(`/lawyer/appointments/${id}/complete`);
       load();
@@ -68,7 +68,7 @@ export default function LawyerAppointments() {
 
   // Hủy lịch
   async function cancel(id) {
-    const reason = prompt("Lý do hủy (có thể bỏ trống):") ?? "";
+    const reason = window.prompt("Lý do hủy (có thể bỏ trống):") ?? "";
     try {
       await api.patch(`/lawyer/appointments/${id}/cancel`, {
         cancel_reason: reason,
@@ -162,7 +162,7 @@ export default function LawyerAppointments() {
                     <div className="flex justify-end gap-2">
                       {a.status === "pending" && (
                         <button
-                          onClick={() => confirm(a.id)}
+                          onClick={() => confirmAppt(a.id)}
                           className="rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700"
                         >
                           Xác nhận
