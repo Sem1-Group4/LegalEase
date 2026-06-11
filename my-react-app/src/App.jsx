@@ -26,6 +26,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminLawyerManage from "./pages/admin/LawyerManage";
 import AdminCustomerManage from "./pages/admin/CustomerManage";
 import AdminAppointmentMonitor from "./pages/admin/AppointmentMonitor";
+import AdminContentManage from "./pages/admin/ContentManage";
 
 function App() {
   return (
@@ -103,6 +104,7 @@ function App() {
         <Route path="/admin/luat-su" element={<AdminLawyerManage />} />
         <Route path="/admin/khach-hang" element={<AdminCustomerManage />} />
         <Route path="/admin/lich-hen" element={<AdminAppointmentMonitor />} />
+        <Route path="/admin/noi-dung" element={<AdminContentManage />} />
       </Route>
     </Routes>
   );
