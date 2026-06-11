@@ -21,12 +21,15 @@ import Profile from "./pages/customer/Profile";
 
 import NotFound from "./pages/NotFound";
 import RequireAuth from "./components/common/RequireAuth";
+
+//-----Trang Admin--------
 import AdminLayout from "./components/layout/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminLawyerManage from "./pages/admin/LawyerManage";
 import AdminCustomerManage from "./pages/admin/CustomerManage";
 import AdminAppointmentMonitor from "./pages/admin/AppointmentMonitor";
 import AdminContentManage from "./pages/admin/ContentManage";
+import AdminReports from "./pages/admin/Reports";
 
 function App() {
   return (
@@ -105,6 +108,7 @@ function App() {
         <Route path="/admin/khach-hang" element={<AdminCustomerManage />} />
         <Route path="/admin/lich-hen" element={<AdminAppointmentMonitor />} />
         <Route path="/admin/noi-dung" element={<AdminContentManage />} />
+        <Route path="/admin/bao-cao" element={<AdminReports />} />
       </Route>
     </Routes>
   );
