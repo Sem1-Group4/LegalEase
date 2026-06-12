@@ -121,7 +121,11 @@ class AvailabilityService
     {
         $slots = [];
         foreach ($this->freeRanges($profile, $date) as $r) {
-            for ($s = $r['start']; $s + $slotMinutes <= $r['end']; $s += $slotMinutes) {
+            // Căn điểm bắt đầu về lưới cố định (bội số slotMinutes từ 0h) để giờ
+            // luôn tròn (08:00, 09:00…). Với hôm nay, freeRanges đã cắt theo giờ
+            // hiện tại nên start có thể lẻ (vd 10:47) -> làm tròn LÊN slot kế tiếp.
+            $start = (int) ceil($r['start'] / $slotMinutes) * $slotMinutes;
+            for ($s = $start; $s + $slotMinutes <= $r['end']; $s += $slotMinutes) {
                 $slots[] = [
                     'start' => $this->fromMinutes($s),
                     'end'   => $this->fromMinutes($s + $slotMinutes),
