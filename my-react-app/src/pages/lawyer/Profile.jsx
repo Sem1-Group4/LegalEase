@@ -4,6 +4,8 @@ import api from "../../api/axios";
 export default function LawyerProfile() {
   const [profile, setProfile] = useState(null);
   const [cities, setCities] = useState([]);
+  const [allSpecs, setAllSpecs] = useState([]);
+  const [selectedSpecs, setSelectedSpecs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -18,12 +20,13 @@ export default function LawyerProfile() {
   const [fee, setFee] = useState("");
 
   useEffect(() => {
-    // Lấy hồ sơ + danh sách thành phố song song
+    // Lấy hồ sơ + thành phố + lĩnh vực song song
     Promise.all([
       api.get("/lawyer/profile"),
-      api.get("/cities").catch(() => ({ data: [] })), // nếu chưa có API cities thì để rỗng
+      api.get("/cities").catch(() => ({ data: [] })),
+      api.get("/specializations").catch(() => ({ data: [] })),
     ])
-      .then(([resProfile, resCities]) => {
+      .then(([resProfile, resCities, resSpecs]) => {
         const p = resProfile.data;
         setProfile(p);
         setCityId(p.city_id ?? "");
@@ -33,10 +36,18 @@ export default function LawyerProfile() {
         setOffice(p.office_address ?? "");
         setFee(p.consultation_fee ?? "");
         setCities(resCities.data || []);
+        setAllSpecs(resSpecs.data || []);
+        setSelectedSpecs((p.specializations || []).map((s) => s.id));
       })
       .catch(() => setError("Không tải được hồ sơ."))
       .finally(() => setLoading(false));
   }, []);
+
+  function toggleSpec(id) {
+    setSelectedSpecs((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
 
   async function save() {
     setSaving(true);
@@ -49,6 +60,7 @@ export default function LawyerProfile() {
         bio,
         office_address: office,
         consultation_fee: fee === "" ? null : Number(fee),
+        specialization_ids: selectedSpecs,
       });
       setMsg("Đã lưu hồ sơ.");
     } catch {
@@ -182,24 +194,36 @@ export default function LawyerProfile() {
           />
         </div>
 
-        {/* Chuyên môn (chỉ hiển thị, sửa sau nếu cần) */}
-        {profile?.specializations?.length > 0 && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Lĩnh vực chuyên môn
-            </label>
-            <div className="mt-1 flex flex-wrap gap-2">
-              {profile.specializations.map((s) => (
-                <span
+        {/* Chọn lĩnh vực hành nghề */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Lĩnh vực hành nghề
+          </label>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {allSpecs.map((s) => {
+              const active = selectedSpecs.includes(s.id);
+              return (
+                <button
+                  type="button"
                   key={s.id}
-                  className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-700"
+                  onClick={() => toggleSpec(s.id)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                    active
+                      ? "bg-[var(--color-primary)] text-white"
+                      : "border border-gray-300 text-gray-600 hover:bg-gray-50"
+                  }`}
                 >
                   {s.name}
-                </span>
-              ))}
-            </div>
+                </button>
+              );
+            })}
           </div>
-        )}
+          {allSpecs.length === 0 && (
+            <p className="mt-1 text-xs text-gray-400">
+              Chưa tải được danh sách lĩnh vực.
+            </p>
+          )}
+        </div>
 
         <div className="flex items-center gap-3 pt-2">
           <button
