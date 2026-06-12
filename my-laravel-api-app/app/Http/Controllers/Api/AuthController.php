@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\CustomerProfile;
+use App\Models\LawyerProfile;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -11,8 +12,8 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Xác thực dùng chung: đăng ký, đăng nhập, đăng xuất.
- * Token cấp bằng Sanctum. Chỉ cho đăng ký role customer.
- * Tài khoản admin và luật sư được cấp sẵn qua seeder (admin bàn giao cho luật sư).
+ * Token cấp bằng Sanctum. Chỉ cho đăng ký role customer hoặc lawyer
+ * (admin được tạo sẵn qua seeder).
  */
 class AuthController extends Controller
 {
@@ -24,20 +25,27 @@ class AuthController extends Controller
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
             'phone'    => 'nullable|string|max:20',
+            'role'     => 'required|in:customer,lawyer',
         ]);
 
-        // Đăng ký công khai chỉ dành cho khách hàng.
-        // Tài khoản luật sư do quản trị viên cấp sẵn (qua seeder), không tự đăng ký.
         $user = User::create([
             'name'     => $data['name'],
             'email'    => $data['email'],
             'password' => Hash::make($data['password']),
             'phone'    => $data['phone'] ?? null,
-            'role'     => 'customer',
+            'role'     => $data['role'],
             'status'   => 'active',
         ]);
 
-        CustomerProfile::create(['user_id' => $user->id]);
+        // Tạo hồ sơ tương ứng với role
+        if ($user->role === 'lawyer') {
+            LawyerProfile::create([
+                'user_id'         => $user->id,
+                'approval_status' => 'pending',   // chờ admin duyệt
+            ]);
+        } else {
+            CustomerProfile::create(['user_id' => $user->id]);
+        }
 
         $token = $user->createToken('api')->plainTextToken;
 
