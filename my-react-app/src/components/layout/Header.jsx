@@ -10,6 +10,18 @@ const navItems = [
   { to: '/lien-he', label: 'Liên hệ' },
 ]
 
+// Trang khu vực riêng tương ứng với vai trò đăng nhập
+function homePathByRole(role) {
+  switch (role) {
+    case 'admin':
+      return '/admin'
+    case 'lawyer':
+      return '/lawyer'
+    default:
+      return '/khach-hang'
+  }
+}
+
 export default function Header() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -49,7 +61,7 @@ export default function Header() {
           {user ? (
             <>
               <Link
-                to="/khach-hang"
+                to={homePathByRole(user.role)}
                 className="hidden text-sm font-medium text-gray-700 hover:text-[var(--color-primary)] sm:inline"
               >
                 Xin chào, <span className="font-semibold">{user.name}</span>
