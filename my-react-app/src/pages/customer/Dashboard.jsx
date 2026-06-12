@@ -1,20 +1,36 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import api from '../../api/axios'
 import CustomerNav from '../../components/customer/CustomerNav'
 import StatusBadge from '../../components/common/StatusBadge'
 import { useAuth } from '../../context/AuthContext'
-import { myAppointments, notifications } from '../../mock/data'
 
-// Dashboard khách hàng — tổng quan lịch hẹn, thông báo.
+// Dashboard khách hàng — tổng quan lịch hẹn, thông báo (gọi API).
 export default function Dashboard() {
   const { user } = useAuth()
 
-  const upcoming = myAppointments.filter((a) => a.status === 'pending' || a.status === 'confirmed')
-  const completed = myAppointments.filter((a) => a.status === 'completed')
+  const [appointments, setAppointments] = useState([])
+  const [notifications, setNotifications] = useState([])
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  useEffect(() => {
+    api.get('/customer/appointments').then((res) => setAppointments(res.data)).catch(() => {})
+    api
+      .get('/customer/notifications')
+      .then((res) => {
+        setNotifications(res.data.data || [])
+        setUnreadCount(res.data.unread_count || 0)
+      })
+      .catch(() => {})
+  }, [])
+
+  const upcoming = appointments.filter((a) => a.status === 'pending' || a.status === 'confirmed')
+  const completed = appointments.filter((a) => a.status === 'completed')
 
   const stats = [
     { label: 'Lịch sắp tới', value: upcoming.length, icon: '📅' },
     { label: 'Đã hoàn tất', value: completed.length, icon: '✅' },
-    { label: 'Thông báo mới', value: notifications.filter((n) => n.unread).length, icon: '🔔' },
+    { label: 'Thông báo mới', value: unreadCount, icon: '🔔' },
   ]
 
   return (
@@ -55,7 +71,9 @@ export default function Dashboard() {
                 <li key={a.id} className="flex items-center justify-between rounded-lg border border-gray-100 p-3">
                   <div>
                     <p className="font-medium text-gray-800">{a.lawyer_name}</p>
-                    <p className="text-sm text-gray-500">{a.specialization} · {a.date} lúc {a.time}</p>
+                    <p className="text-sm text-gray-500">
+                      {a.lawyer_city ? `${a.lawyer_city} · ` : ''}{a.appointment_date} lúc {a.start_time}
+                    </p>
                   </div>
                   <StatusBadge status={a.status} />
                 </li>
@@ -74,17 +92,22 @@ export default function Dashboard() {
         {/* Thông báo */}
         <section className="rounded-xl border border-gray-200 bg-white p-6">
           <h2 className="font-bold text-gray-800">Thông báo</h2>
-          <ul className="mt-4 space-y-3">
-            {notifications.map((n) => (
-              <li key={n.id} className="flex gap-2 text-sm">
-                <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.unread ? 'bg-[var(--color-accent)]' : 'bg-gray-300'}`} />
-                <div>
-                  <p className="text-gray-700">{n.text}</p>
-                  <p className="text-xs text-gray-400">{n.time}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
+          {notifications.length === 0 ? (
+            <p className="mt-4 text-sm text-gray-400">Chưa có thông báo nào.</p>
+          ) : (
+            <ul className="mt-4 space-y-3">
+              {notifications.map((n) => (
+                <li key={n.id} className="flex gap-2 text-sm">
+                  <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${!n.is_read ? 'bg-[var(--color-accent)]' : 'bg-gray-300'}`} />
+                  <div>
+                    <p className="font-medium text-gray-700">{n.title}</p>
+                    <p className="text-gray-600">{n.message}</p>
+                    <p className="text-xs text-gray-400">{n.created_at?.slice(0, 16).replace('T', ' ')}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </div>
     </div>

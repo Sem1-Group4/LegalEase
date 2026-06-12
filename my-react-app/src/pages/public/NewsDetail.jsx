@@ -1,13 +1,36 @@
+import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import api from '../../api/axios'
 import EmptyState from '../../components/common/EmptyState'
-import { getNewsById, news } from '../../mock/data'
 
-// Chi tiết tin tức pháp lý.
+// Chi tiết tin tức pháp lý (lấy từ API).
 export default function NewsDetail() {
   const { id } = useParams()
-  const article = getNewsById(id)
+  const [article, setArticle] = useState(null)
+  const [related, setRelated] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
 
-  if (!article) {
+  useEffect(() => {
+    setLoading(true)
+    setNotFound(false)
+    api
+      .get(`/announcements/${id}`)
+      .then((res) => setArticle(res.data))
+      .catch(() => setNotFound(true))
+      .finally(() => setLoading(false))
+    // Bài liên quan: lấy danh sách rồi loại bài hiện tại.
+    api
+      .get('/announcements')
+      .then((res) => setRelated(res.data.filter((n) => String(n.id) !== String(id)).slice(0, 3)))
+      .catch(() => setRelated([]))
+  }, [id])
+
+  if (loading) {
+    return <div className="mx-auto max-w-3xl px-4 py-16 text-gray-500">Đang tải…</div>
+  }
+
+  if (notFound || !article) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16">
         <EmptyState title="Không tìm thấy bài viết" icon="📰" />
@@ -18,21 +41,19 @@ export default function NewsDetail() {
     )
   }
 
-  // Bài viết liên quan (khác bài hiện tại), lấy tối đa 3.
-  const related = news.filter((n) => n.id !== article.id).slice(0, 3)
-
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <Link to="/tin-tuc" className="text-sm text-[var(--color-primary)] hover:underline">← Tin tức pháp lý</Link>
 
       <article className="mt-4">
-        <span className="text-xs font-medium text-[var(--color-accent)]">{article.category}</span>
         <h1 className="mt-1 text-3xl font-bold text-gray-800">{article.title}</h1>
-        <p className="mt-2 text-sm text-gray-400">Đăng ngày {article.created_at}</p>
+        <p className="mt-2 text-sm text-gray-400">
+          Đăng ngày {article.published_at}{article.author ? ` · ${article.author}` : ''}
+        </p>
 
         <div className="mt-6 flex h-52 items-center justify-center rounded-xl bg-blue-50 text-6xl">📰</div>
 
-        <p className="mt-6 leading-relaxed text-gray-700">{article.content}</p>
+        <p className="mt-6 whitespace-pre-line leading-relaxed text-gray-700">{article.content}</p>
       </article>
 
       {related.length > 0 && (

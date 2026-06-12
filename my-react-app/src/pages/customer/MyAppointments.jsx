@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import api from '../../api/axios'
 import CustomerNav from '../../components/customer/CustomerNav'
 import StatusBadge from '../../components/common/StatusBadge'
 import EmptyState from '../../components/common/EmptyState'
-import { myAppointments } from '../../mock/data'
 
 const FILTERS = [
   { value: 'all', label: 'Tất cả' },
@@ -13,16 +13,37 @@ const FILTERS = [
   { value: 'cancelled', label: 'Đã hủy' },
 ]
 
-// Lịch hẹn của tôi — xem, lọc theo trạng thái, hủy, đánh giá.
+// Lịch hẹn của tôi — xem, lọc theo trạng thái, hủy, đánh giá (gọi API).
 export default function MyAppointments() {
-  // Bản sao cục bộ để demo thao tác hủy lịch.
-  const [items, setItems] = useState(() => myAppointments.map((a) => ({ ...a })))
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [filter, setFilter] = useState('all')
+
+  function load() {
+    setLoading(true)
+    setError('')
+    api
+      .get('/customer/appointments')
+      .then((res) => setItems(res.data))
+      .catch(() => setError('Không tải được lịch hẹn.'))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    load()
+  }, [])
 
   const visible = filter === 'all' ? items : items.filter((a) => a.status === filter)
 
-  function cancel(id) {
-    setItems((list) => list.map((a) => (a.id === id ? { ...a, status: 'cancelled' } : a)))
+  async function cancel(id) {
+    if (!confirm('Bạn chắc chắn muốn hủy lịch hẹn này?')) return
+    try {
+      await api.patch(`/customer/appointments/${id}/cancel`)
+      load()
+    } catch (err) {
+      alert(err.response?.data?.message || 'Hủy lịch không thành công.')
+    }
   }
 
   return (
@@ -49,7 +70,11 @@ export default function MyAppointments() {
         ))}
       </div>
 
-      {visible.length === 0 ? (
+      {loading ? (
+        <p className="mt-6 text-gray-500">Đang tải…</p>
+      ) : error ? (
+        <p className="mt-6 text-red-600">{error}</p>
+      ) : visible.length === 0 ? (
         <div className="mt-6">
           <EmptyState title="Không có lịch hẹn nào" description="Hãy tìm luật sư và đặt lịch hẹn đầu tiên của bạn." icon="📅" />
         </div>
@@ -62,8 +87,13 @@ export default function MyAppointments() {
                   <h3 className="font-semibold text-gray-800">{a.lawyer_name}</h3>
                   <StatusBadge status={a.status} />
                 </div>
-                <p className="mt-1 text-sm text-gray-500">{a.specialization} · {a.date} lúc {a.time}</p>
-                {a.note && <p className="mt-1 text-sm text-gray-400">Ghi chú: {a.note}</p>}
+                <p className="mt-1 text-sm text-gray-500">
+                  {a.lawyer_city ? `${a.lawyer_city} · ` : ''}{a.appointment_date} lúc {a.start_time}
+                </p>
+                {a.customer_note && <p className="mt-1 text-sm text-gray-400">Ghi chú: {a.customer_note}</p>}
+                {a.status === 'cancelled' && a.cancel_reason && (
+                  <p className="mt-1 text-sm text-red-400">Lý do hủy: {a.cancel_reason}</p>
+                )}
               </div>
 
               <div className="flex gap-2">
@@ -75,13 +105,16 @@ export default function MyAppointments() {
                     Hủy lịch
                   </button>
                 )}
-                {a.status === 'completed' && (
+                {a.can_review && (
                   <Link
                     to={`/khach-hang/danh-gia/${a.id}`}
                     className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-gray-900 hover:brightness-95"
                   >
                     Đánh giá
                   </Link>
+                )}
+                {a.has_review && (
+                  <span className="rounded-md border border-gray-200 px-4 py-2 text-sm text-gray-400">Đã đánh giá</span>
                 )}
               </div>
             </div>
