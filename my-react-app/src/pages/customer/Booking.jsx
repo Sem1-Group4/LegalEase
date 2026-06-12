@@ -3,6 +3,9 @@ import { useParams, Link } from 'react-router-dom'
 import api from '../../api/axios'
 import EmptyState from '../../components/common/EmptyState'
 
+// Số block (tiếng) tối đa khách được chọn liên tiếp trong 1 lần đặt.
+const MAX_BLOCKS = 3
+
 // Hôm nay theo định dạng YYYY-MM-DD (dùng làm min cho input ngày).
 function todayStr() {
   const d = new Date()
@@ -21,7 +24,8 @@ export default function Booking() {
   const [selectedDate, setSelectedDate] = useState(todayStr())
   const [slots, setSlots] = useState([])
   const [loadingSlots, setLoadingSlots] = useState(false)
-  const [selectedTime, setSelectedTime] = useState('')
+  // Các block giờ đang chọn — luôn LIÊN TIẾP và sắp theo thứ tự thời gian.
+  const [selected, setSelected] = useState([])
   const [note, setNote] = useState('')
 
   const [submitting, setSubmitting] = useState(false)
@@ -42,7 +46,7 @@ export default function Booking() {
   useEffect(() => {
     if (!selectedDate) return
     setLoadingSlots(true)
-    setSelectedTime('')
+    setSelected([])
     api
       .get(`/lawyers/${lawyerId}/slots`, { params: { date: selectedDate } })
       .then((res) => setSlots(res.data.slots || []))
@@ -50,15 +54,47 @@ export default function Booking() {
       .finally(() => setLoadingSlots(false))
   }, [lawyerId, selectedDate])
 
+  // Khoảng giờ đang chọn (giờ bắt đầu của block đầu → giờ kết thúc của block cuối).
+  const range = selected.length
+    ? { start: selected[0].start, end: selected[selected.length - 1].end }
+    : null
+
+  const isSelected = (s) => selected.some((x) => x.start === s.start)
+
+  // Bấm 1 block: giữ tập chọn luôn LIÊN TIẾP và tối đa MAX_BLOCKS.
+  function toggleSlot(s) {
+    setError('')
+    const prev = selected
+    if (prev.length === 0) return setSelected([s])
+
+    const first = prev[0]
+    const last = prev[prev.length - 1]
+
+    if (s.start === first.start) return setSelected(prev.slice(1))       // bỏ block đầu
+    if (s.start === last.start) return setSelected(prev.slice(0, -1))    // bỏ block cuối
+
+    if (s.start === last.end) {                                          // nối vào cuối
+      if (prev.length >= MAX_BLOCKS) return setError(`Chỉ được chọn tối đa ${MAX_BLOCKS} tiếng liên tiếp.`)
+      return setSelected([...prev, s])
+    }
+    if (s.end === first.start) {                                         // nối vào đầu
+      if (prev.length >= MAX_BLOCKS) return setError(`Chỉ được chọn tối đa ${MAX_BLOCKS} tiếng liên tiếp.`)
+      return setSelected([s, ...prev])
+    }
+
+    return setSelected([s])                                              // bấm chỗ khác -> chọn lại từ đầu
+  }
+
   async function handleConfirm() {
-    if (!selectedDate || !selectedTime) return
+    if (!selectedDate || !range) return
     setSubmitting(true)
     setError('')
     try {
       await api.post('/customer/appointments', {
         lawyer_profile_id: Number(lawyerId),
         appointment_date: selectedDate,
-        start_time: selectedTime,
+        start_time: range.start,
+        end_time: range.end,
         customer_note: note || null,
       })
       setDone(true)
@@ -93,7 +129,8 @@ export default function Booking() {
           <h1 className="mt-4 text-xl font-bold text-[var(--color-primary)]">Đặt lịch thành công!</h1>
           <p className="mt-2 text-gray-600">
             Bạn đã đặt lịch với <span className="font-semibold">{lawyer.name}</span><br />
-            vào <span className="font-semibold">{selectedDate}</span> lúc <span className="font-semibold">{selectedTime}</span>.
+            vào <span className="font-semibold">{selectedDate}</span>
+            {range && <> lúc <span className="font-semibold">{range.start} – {range.end}</span></>}.
           </p>
           <p className="mt-2 text-sm text-gray-500">Luật sư sẽ xác nhận và liên hệ với bạn sớm.</p>
           <div className="mt-6 flex justify-center gap-3">
@@ -133,27 +170,38 @@ export default function Booking() {
 
         {/* Chọn giờ */}
         <div>
-          <p className="mb-2 text-sm font-medium text-gray-700">2. Chọn giờ</p>
+          <div className="mb-2 flex items-baseline justify-between gap-2">
+            <p className="text-sm font-medium text-gray-700">2. Chọn giờ</p>
+            <span className="text-xs text-gray-400">Chọn 1–{MAX_BLOCKS} khung giờ liên tiếp</span>
+          </div>
           {loadingSlots ? (
             <p className="text-sm text-gray-400">Đang tải khung giờ…</p>
           ) : slots.length === 0 ? (
             <p className="text-sm text-gray-400">Ngày này luật sư không có khung giờ trống. Hãy chọn ngày khác.</p>
           ) : (
-            <div className="flex flex-wrap gap-2">
-              {slots.map((s) => (
-                <button
-                  key={s.start}
-                  onClick={() => setSelectedTime(s.start)}
-                  className={`rounded-md border px-4 py-2 text-sm font-medium ${
-                    selectedTime === s.start
-                      ? 'border-[var(--color-accent)] bg-[var(--color-accent)] text-gray-900'
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  {s.start}
-                </button>
-              ))}
-            </div>
+            <>
+              <div className="flex flex-wrap gap-2">
+                {slots.map((s) => (
+                  <button
+                    key={s.start}
+                    onClick={() => toggleSlot(s)}
+                    className={`rounded-md border px-4 py-2 text-sm font-medium ${
+                      isSelected(s)
+                        ? 'border-[var(--color-accent)] bg-[var(--color-accent)] text-gray-900'
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {s.start}
+                  </button>
+                ))}
+              </div>
+              {range && (
+                <p className="mt-3 text-sm text-gray-600">
+                  Đã chọn: <span className="font-semibold text-gray-800">{range.start} – {range.end}</span>{' '}
+                  ({selected.length} tiếng)
+                </p>
+              )}
+            </>
           )}
         </div>
 
@@ -173,10 +221,14 @@ export default function Booking() {
 
         <button
           onClick={handleConfirm}
-          disabled={!selectedDate || !selectedTime || submitting}
+          disabled={!selectedDate || !range || submitting}
           className="w-full rounded-md bg-[var(--color-primary)] px-4 py-2.5 font-semibold text-white hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {submitting ? 'Đang đặt lịch…' : 'Xác nhận đặt lịch'}
+          {submitting
+            ? 'Đang đặt lịch…'
+            : range
+              ? `Xác nhận đặt lịch ${range.start} – ${range.end}`
+              : 'Xác nhận đặt lịch'}
         </button>
       </div>
     </div>

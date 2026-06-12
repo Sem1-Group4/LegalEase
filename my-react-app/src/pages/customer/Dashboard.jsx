@@ -72,7 +72,7 @@ export default function Dashboard() {
                   <div>
                     <p className="font-medium text-gray-800">{a.lawyer_name}</p>
                     <p className="text-sm text-gray-500">
-                      {a.lawyer_city ? `${a.lawyer_city} · ` : ''}{a.appointment_date} lúc {a.start_time}
+                      {a.lawyer_city ? `${a.lawyer_city} · ` : ''}{a.appointment_date} lúc {a.start_time}{a.end_time ? ` – ${a.end_time}` : ''}
                     </p>
                   </div>
                   <StatusBadge status={a.status} />

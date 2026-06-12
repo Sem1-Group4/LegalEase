@@ -86,7 +86,8 @@ export function AuthProvider({ children }) {
     return { ok: true, user: safe };
   }
 
-  // Đăng ký: thử API thật, lỗi mạng thì fallback tạo user tạm.
+  // Đăng ký: chỉ tạo tài khoản khách hàng (luật sư do admin cấp sẵn).
+  // Thử API thật, lỗi mạng thì fallback tạo user tạm.
   async function register(data) {
     try {
       const res = await api.post("/auth/register", {
@@ -94,7 +95,6 @@ export function AuthProvider({ children }) {
         email: data.email,
         password: data.password,
         password_confirmation: data.password_confirmation ?? data.password,
-        role: data.role || "customer",
       });
       const { token, user: apiUser } = res.data;
       if (token) localStorage.setItem(TOKEN_KEY, token);
@@ -109,7 +109,7 @@ export function AuthProvider({ children }) {
       const safe = {
         name: data.name,
         email: data.email,
-        role: data.role || "customer",
+        role: "customer",
         phone: data.phone,
         city: data.city,
       };
