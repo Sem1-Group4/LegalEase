@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 // Layout riêng cho khu Admin: sidebar trái + vùng nội dung phải.
@@ -23,13 +23,12 @@ export default function AdminLayout() {
   return (
     <div className="min-h-screen flex bg-slate-50">
       <aside className="w-64 shrink-0 bg-[var(--color-primary)] text-white flex flex-col">
-        <div className="px-6 py-5 border-b border-white/10">
-          <span className="text-lg font-bold">Legal</span>
-          <span className="text-lg font-bold text-[var(--color-accent)]">
-            Ease
-          </span>
-          <p className="text-xs text-white/60 mt-1">Trang quản trị</p>
-        </div>
+        <Link to="/trangchu" className="mb-6 block px-2">
+          <p className="text-xl font-bold text-white">
+            Legal<span className="text-[var(--color-accent)]">Ease</span>
+          </p>
+          <p className="text-xs text-white/60">Trang quản trị</p>
+        </Link>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
           {NAV.map((item) => (

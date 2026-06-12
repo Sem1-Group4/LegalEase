@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 export default function LawyerLayout() {
@@ -21,12 +21,12 @@ export default function LawyerLayout() {
     <div className="flex min-h-screen">
       {/* Sidebar */}
       <aside className="flex w-64 flex-col bg-[var(--color-primary)] p-4">
-        <div className="mb-6 px-2">
+        <Link to="/trangchu" className="mb-6 block px-2">
           <p className="text-xl font-bold text-white">
             Legal<span className="text-[var(--color-accent)]">Ease</span>
           </p>
           <p className="text-xs text-white/60">Trang luật sư</p>
-        </div>
+        </Link>
 
         <nav className="flex-1 space-y-1">
           <NavLink to="/lawyer" end className={linkClass}>
