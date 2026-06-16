@@ -30,6 +30,7 @@ import AdminCustomerManage from "./pages/admin/CustomerManage";
 import AdminAppointmentMonitor from "./pages/admin/AppointmentMonitor";
 import AdminContentManage from "./pages/admin/ContentManage";
 import AdminReports from "./pages/admin/Reports";
+import AdminSpecializationManage from "./pages/admin/SpecializationManage";
 
 //----Trang Lawyer-------
 import LawyerLayout from "./components/layout/LawyerLayout";
@@ -116,6 +117,7 @@ function App() {
         <Route path="/admin/lich-hen" element={<AdminAppointmentMonitor />} />
         <Route path="/admin/noi-dung" element={<AdminContentManage />} />
         <Route path="/admin/bao-cao" element={<AdminReports />} />
+        <Route path="/admin/linh-vuc" element={<AdminSpecializationManage />} />
       </Route>
 
       {/* Khu lawyer - layout riêng */}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import api from "../../api/axios";
 
 export default function LawyerProfile() {
@@ -11,6 +11,11 @@ export default function LawyerProfile() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
 
+  // Ảnh đại diện
+  const [avatarUrl, setAvatarUrl] = useState(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef(null);
+
   // Các ô nhập
   const [cityId, setCityId] = useState("");
   const [license, setLicense] = useState("");
@@ -20,7 +25,6 @@ export default function LawyerProfile() {
   const [fee, setFee] = useState("");
 
   useEffect(() => {
-    // Lấy hồ sơ + thành phố + lĩnh vực song song
     Promise.all([
       api.get("/lawyer/profile"),
       api.get("/cities").catch(() => ({ data: [] })),
@@ -35,6 +39,7 @@ export default function LawyerProfile() {
         setBio(p.bio ?? "");
         setOffice(p.office_address ?? "");
         setFee(p.consultation_fee ?? "");
+        setAvatarUrl(p.avatar ?? null);
         setCities(resCities.data || []);
         setAllSpecs(resSpecs.data || []);
         setSelectedSpecs((p.specializations || []).map((s) => s.id));
@@ -47,6 +52,29 @@ export default function LawyerProfile() {
     setSelectedSpecs((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
+  }
+
+  // Khi chọn file ảnh -> upload ngay
+  async function handleAvatarChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingAvatar(true);
+    setMsg("");
+    try {
+      const formData = new FormData();
+      formData.append("avatar", file);
+      const res = await api.post("/lawyer/profile/avatar", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setAvatarUrl(res.data.avatar);
+      setMsg("Đã cập nhật ảnh đại diện.");
+    } catch (err) {
+      setMsg(err?.response?.data?.message || "Tải ảnh không thành công.");
+    } finally {
+      setUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   }
 
   async function save() {
@@ -101,6 +129,46 @@ export default function LawyerProfile() {
       </div>
 
       <div className="mt-6 space-y-4 rounded-xl border border-gray-200 bg-white p-6">
+        {/* Ảnh đại diện */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Ảnh đại diện
+          </label>
+          <div className="mt-2 flex items-center gap-4">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="Ảnh đại diện"
+                className="h-24 w-24 rounded-full object-cover border border-gray-200"
+              />
+            ) : (
+              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gray-100 text-gray-400 text-xs border border-gray-200">
+                Chưa có ảnh
+              </div>
+            )}
+            <div>
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="rounded-lg border border-[var(--color-primary)] px-4 py-2 text-sm font-medium text-[var(--color-primary)] hover:bg-blue-50 disabled:opacity-60"
+              >
+                {uploadingAvatar ? "Đang tải…" : "Chọn ảnh"}
+              </button>
+              <p className="mt-1 text-xs text-gray-400">
+                JPG, PNG, tối đa 2MB.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Thành phố */}
         <div>
           <label className="block text-sm font-medium text-gray-700">

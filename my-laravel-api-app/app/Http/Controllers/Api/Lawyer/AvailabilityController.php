@@ -50,6 +50,22 @@ class AvailabilityController extends Controller
             'repeat_to'      => 'required_if:type,recurring|nullable|date|after_or_equal:repeat_from',
         ]);
 
+        // ====== Yêu cầu 2: Chống trùng giờ cho khung NGÀY CỤ THỂ ======
+        if ($data['type'] === 'specific') {
+            $trungGio = $profile->availabilities()
+                ->where('available_date', $data['available_date'])
+                ->where('start_time', '<', $data['end_time'])   // khung cũ bắt đầu trước khi khung mới kết thúc
+                ->where('end_time', '>', $data['start_time'])    // khung cũ kết thúc sau khi khung mới bắt đầu
+                ->exists();
+
+            if ($trungGio) {
+                return response()->json([
+                    'message' => 'Khung giờ này bị trùng với một khung giờ đã có trong ngày. Vui lòng chọn giờ khác.',
+                ], 422);
+            }
+        }
+        // ===============================================================
+
         // Chuẩn hóa dữ liệu theo từng kiểu
         if ($data['type'] === 'specific') {
             $payload = [
