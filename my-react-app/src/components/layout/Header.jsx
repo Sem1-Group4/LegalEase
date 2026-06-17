@@ -62,9 +62,22 @@ export default function Header() {
             <>
               <Link
                 to={homePathByRole(user.role)}
-                className="hidden text-sm font-medium text-gray-700 hover:text-[var(--color-primary)] sm:inline"
+                className="hidden items-center gap-2 text-sm font-medium text-gray-700 hover:text-[var(--color-primary)] sm:inline-flex"
               >
-                Xin chào, <span className="font-semibold">{user.name}</span>
+                {user.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt=""
+                    className="h-8 w-8 rounded-full object-cover ring-1 ring-gray-200"
+                  />
+                ) : (
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary)] text-xs font-bold text-white">
+                    {(user.name || '?').trim().charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <span>
+                  Xin chào, <span className="font-semibold">{user.name}</span>
+                </span>
               </Link>
               <button
                 onClick={handleLogout}

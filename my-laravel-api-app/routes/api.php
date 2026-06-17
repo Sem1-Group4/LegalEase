@@ -99,4 +99,5 @@ Route::middleware(['auth:sanctum', 'role:customer'])->prefix('customer')->group(
     // Hồ sơ cá nhân
     Route::get('/profile', [CustomerProfileController::class, 'show']);
     Route::put('/profile', [CustomerProfileController::class, 'update']);
+    Route::post('/profile/avatar', [CustomerProfileController::class, 'uploadAvatar']);
 });
