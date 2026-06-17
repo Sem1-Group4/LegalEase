@@ -88,7 +88,7 @@ export default function MyAppointments() {
                   <StatusBadge status={a.status} />
                 </div>
                 <p className="mt-1 text-sm text-gray-500">
-                  {a.lawyer_city ? `${a.lawyer_city} · ` : ''}{a.appointment_date} lúc {a.start_time}
+                  {a.lawyer_city ? `${a.lawyer_city} · ` : ''}{a.appointment_date} lúc {a.start_time}{a.end_time ? ` – ${a.end_time}` : ''}
                 </p>
                 {a.customer_note && <p className="mt-1 text-sm text-gray-400">Ghi chú: {a.customer_note}</p>}
                 {a.status === 'cancelled' && a.cancel_reason && (

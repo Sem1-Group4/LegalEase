@@ -65,6 +65,7 @@ class AppointmentController extends Controller
             'lawyer_profile_id' => 'required|exists:lawyer_profiles,id',
             'appointment_date'  => 'required|date|after_or_equal:today',
             'start_time'        => 'required|date_format:H:i',
+            'end_time'          => 'nullable|date_format:H:i|after:start_time',
             'customer_note'     => 'nullable|string|max:1000',
         ]);
 
@@ -76,24 +77,45 @@ class AppointmentController extends Controller
         $date  = Carbon::parse($data['appointment_date'])->startOfDay();
         $start = substr($data['start_time'], 0, 5);
 
-        return DB::transaction(function () use ($availability, $customer, $lawyer, $date, $start, $data) {
-            // Slot phải hợp lệ & còn trống theo khung giờ rảnh của luật sư
-            if (! $availability->isSlotBookable($lawyer, $date, $start)) {
-                return response()->json(['message' => 'Khung giờ này không còn trống hoặc không hợp lệ.'], 422);
+        // Khoảng đặt: 1 block (mặc định) hoặc nhiều block 60' liên tiếp (gửi kèm end_time).
+        $slot     = AvailabilityService::SLOT_MINUTES;
+        $maxBlocks = 3;                                  // tối đa 3 tiếng liên tiếp
+        $startMin = $availability->toMinutes($start);
+        $endMin   = isset($data['end_time'])
+            ? $availability->toMinutes(substr($data['end_time'], 0, 5))
+            : $startMin + $slot;
+        $end      = $availability->fromMinutes($endMin);
+        $duration = $endMin - $startMin;
+
+        // Khoảng phải là bội số của slot và không vượt giới hạn
+        if ($duration <= 0 || $duration % $slot !== 0) {
+            return response()->json(['message' => 'Khoảng giờ đã chọn không hợp lệ.'], 422);
+        }
+        if ($duration > $slot * $maxBlocks) {
+            return response()->json(['message' => "Chỉ được đặt tối đa {$maxBlocks} tiếng liên tiếp."], 422);
+        }
+
+        return DB::transaction(function () use ($availability, $customer, $lawyer, $date, $start, $end, $startMin, $endMin, $slot, $duration, $data) {
+            // Mọi block 60' trong khoảng đều phải hợp lệ & còn trống
+            for ($m = $startMin; $m < $endMin; $m += $slot) {
+                if (! $availability->isSlotBookable($lawyer, $date, $availability->fromMinutes($m))) {
+                    return response()->json(['message' => 'Một trong các khung giờ đã chọn không còn trống hoặc không hợp lệ.'], 422);
+                }
             }
 
-            // Chặn đặt trùng đúng slot (phòng race nhẹ)
-            $exists = Appointment::where('lawyer_profile_id', $lawyer->id)
+            // Chặn chồng lấn với lịch đang chờ/đã xác nhận (phòng race nhẹ)
+            $overlap = Appointment::where('lawyer_profile_id', $lawyer->id)
                 ->whereDate('appointment_date', $date->toDateString())
-                ->where('start_time', $start . ':00')
                 ->whereIn('status', ['pending', 'confirmed'])
+                ->where('start_time', '<', $end . ':00')
+                ->where('end_time', '>', $start . ':00')
                 ->exists();
-            if ($exists) {
+            if ($overlap) {
                 return response()->json(['message' => 'Khung giờ này vừa có người đặt.'], 422);
             }
 
-            $end   = $availability->fromMinutes($availability->toMinutes($start) + AvailabilityService::SLOT_MINUTES);
-            $cover = $availability->findCoveringAvailability($lawyer, $date, $start);
+            // Bản ghi availability bao trùm cả khoảng đã chọn (để truy vết)
+            $cover = $availability->findCoveringAvailability($lawyer, $date, $start, $duration);
 
             $appointment = Appointment::create([
                 'customer_id'       => $customer->id,
@@ -106,7 +128,7 @@ class AppointmentController extends Controller
                 'customer_note'     => $data['customer_note'] ?? null,
             ]);
 
-            $when = $date->format('d/m/Y') . ' lúc ' . $start;
+            $when = $date->format('d/m/Y') . ' lúc ' . $start . '–' . $end;
 
             // Thông báo cho luật sư
             $this->notify(
