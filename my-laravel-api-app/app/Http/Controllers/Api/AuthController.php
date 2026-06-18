@@ -96,7 +96,10 @@ class AuthController extends Controller
     /** Gom dữ liệu user trả về cho gọn. */
     private function userPayload(User $user): array
     {
-        $avatarPath = $user->customerProfile?->avatar;
+        // Luật sư lấy avatar từ hồ sơ luật sư, còn lại lấy từ hồ sơ khách hàng.
+        $avatarPath = $user->role === 'lawyer'
+            ? $user->lawyerProfile?->avatar
+            : $user->customerProfile?->avatar;
 
         return [
             'id'     => $user->id,

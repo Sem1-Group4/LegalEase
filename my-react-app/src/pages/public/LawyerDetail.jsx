@@ -48,9 +48,17 @@ export default function LawyerDetail() {
 
       {/* Đầu trang: ảnh + thông tin chính */}
       <div className="mt-4 flex flex-col gap-6 rounded-xl border border-gray-200 bg-white p-6 sm:flex-row">
-        <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary)] text-5xl font-bold text-white">
-          {initial}
-        </div>
+        {lawyer.avatar ? (
+          <img
+            src={lawyer.avatar}
+            alt={lawyer.name}
+            className="h-28 w-28 shrink-0 rounded-xl object-cover"
+          />
+        ) : (
+          <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary)] text-5xl font-bold text-white">
+            {initial}
+          </div>
+        )}
         <div className="flex-1">
           <h1 className="flex items-center gap-2 text-2xl font-bold text-[var(--color-primary)]">
             {lawyer.name}
