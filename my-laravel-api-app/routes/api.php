@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Admin\CustomerController as AdminCustomerController
 use App\Http\Controllers\Api\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Api\Admin\AnnouncementController as AdminAnnouncementController;
 use App\Http\Controllers\Api\Admin\SiteContentController as AdminSiteContentController;
+use App\Http\Controllers\Api\Admin\UploadController as AdminUploadController;
 use App\Http\Controllers\Api\Lawyer\DashboardController as LawyerDashboardController;
 use App\Http\Controllers\Api\Lawyer\ProfileController as LawyerProfileController;
 use App\Http\Controllers\Api\Lawyer\AvailabilityController as LawyerAvailabilityController;
@@ -61,6 +62,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::post('/announcements', [AdminAnnouncementController::class, 'store']);
     Route::put('/announcements/{announcement}', [AdminAnnouncementController::class, 'update']);
     Route::delete('/announcements/{announcement}', [AdminAnnouncementController::class, 'destroy']);
+    Route::post('/upload/image', [AdminUploadController::class, 'image']);
     Route::get('/site-contents', [AdminSiteContentController::class, 'index']);
     Route::put('/site-contents/{key}', [AdminSiteContentController::class, 'upsert']);
     Route::get('/appointments', [AdminAppointmentController::class, 'index']);

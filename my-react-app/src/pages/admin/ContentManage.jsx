@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
+import RichTextEditor from "../../components/common/RichTextEditor";
 
 export default function ContentManage() {
   const [news, setNews] = useState([]);
@@ -27,7 +28,6 @@ export default function ContentManage() {
     load();
   }, []);
 
-  // Mở form thêm mới (xóa trắng các ô).
   function openCreate() {
     setEditingId(null);
     setTitle("");
@@ -36,11 +36,9 @@ export default function ContentManage() {
     setShowForm(true);
   }
 
-  // Mở form sửa (đổ dữ liệu tin cũ vào ô).
   async function openEdit(item) {
     setEditingId(item.id);
     setShowForm(true);
-    // Hiện tạm tiêu đề đã biết, nội dung để trống trong lúc tải
     setTitle(item.title || "");
     setContent("");
     setIsPublished(item.is_published ?? true);
@@ -61,7 +59,6 @@ export default function ContentManage() {
     setEditingId(null);
   }
 
-  // Lưu: nếu có editingId thì PUT (sửa), không thì POST (thêm).
   async function save() {
     if (!title.trim()) {
       alert("Vui lòng nhập tiêu đề.");
@@ -84,7 +81,6 @@ export default function ContentManage() {
     }
   }
 
-  // Xóa tin (có xác nhận).
   async function remove(id, t) {
     if (!confirm(`Xóa tin "${t}"?`)) return;
     try {
@@ -138,13 +134,13 @@ export default function ContentManage() {
               <label className="block text-sm font-medium text-gray-700">
                 Nội dung
               </label>
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                rows={6}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                placeholder="Nội dung chi tiết…"
-              />
+              <div className="mt-1">
+                <RichTextEditor
+                  value={content}
+                  onChange={setContent}
+                  placeholder="Nội dung chi tiết…"
+                />
+              </div>
             </div>
 
             <label className="flex items-center gap-2 text-sm text-gray-700">
