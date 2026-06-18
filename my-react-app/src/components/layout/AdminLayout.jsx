@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 const NAV = [
   { to: "/admin", label: "Tổng quan", end: true },
   { to: "/admin/luat-su", label: "Quản lý luật sư" },
+  { to: "/admin/linh-vuc", label: "Lĩnh vực hành nghề" },
   { to: "/admin/khach-hang", label: "Quản lý khách hàng" },
   { to: "/admin/lich-hen", label: "Giám sát lịch hẹn" },
   { to: "/admin/noi-dung", label: "Quản lý nội dung" },

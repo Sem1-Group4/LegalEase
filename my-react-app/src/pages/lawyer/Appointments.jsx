@@ -23,11 +23,17 @@ const STATUS_CLASS = {
   cancelled: "bg-gray-100 text-gray-500",
 };
 
+// Lấy chữ cái đầu của tên (cho ảnh placeholder khi khách chưa có avatar)
+function initial(name) {
+  return name ? name.trim().charAt(0).toUpperCase() : "?";
+}
+
 export default function LawyerAppointments() {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [tab, setTab] = useState("");
+  const [selected, setSelected] = useState(null); // lịch hẹn đang xem chi tiết khách
 
   function load(status = tab) {
     setLoading(true);
@@ -83,7 +89,8 @@ export default function LawyerAppointments() {
     <div>
       <h1 className="text-2xl font-bold text-gray-800">Lịch hẹn</h1>
       <p className="mt-1 text-gray-500">
-        Xác nhận, hoàn thành hoặc hủy lịch hẹn của bạn.
+        Xác nhận, hoàn thành hoặc hủy lịch hẹn của bạn. Bấm vào tên khách để xem
+        chi tiết.
       </p>
 
       {/* Tabs lọc */}
@@ -128,15 +135,32 @@ export default function LawyerAppointments() {
                   className="border-b border-gray-100 last:border-0"
                 >
                   <td className="px-4 py-3">
-                    <p className="font-medium text-gray-800">{a.khach_hang}</p>
-                    {a.so_dien_thoai && (
-                      <p className="text-xs text-gray-400">{a.so_dien_thoai}</p>
-                    )}
-                    {a.customer_note && (
-                      <p className="mt-1 text-xs text-gray-500">
-                        Ghi chú: {a.customer_note}
-                      </p>
-                    )}
+                    <button
+                      onClick={() => setSelected(a)}
+                      className="flex items-center gap-3 text-left hover:opacity-80"
+                    >
+                      {a.avatar ? (
+                        <img
+                          src={a.avatar}
+                          alt={a.khach_hang}
+                          className="h-9 w-9 rounded-full object-cover border border-gray-200"
+                        />
+                      ) : (
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-primary)] text-xs font-bold text-white">
+                          {initial(a.khach_hang)}
+                        </span>
+                      )}
+                      <span>
+                        <span className="block font-medium text-[var(--color-primary)] underline-offset-2 hover:underline">
+                          {a.khach_hang}
+                        </span>
+                        {a.so_dien_thoai && (
+                          <span className="block text-xs text-gray-400">
+                            {a.so_dien_thoai}
+                          </span>
+                        )}
+                      </span>
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-gray-700">
                     {a.appointment_date}
@@ -196,6 +220,80 @@ export default function LawyerAppointments() {
           </table>
         </div>
       )}
+
+      {/* Popup chi tiết khách hàng */}
+      {selected && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setSelected(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-4">
+              {selected.avatar ? (
+                <img
+                  src={selected.avatar}
+                  alt={selected.khach_hang}
+                  className="h-16 w-16 rounded-full object-cover border border-gray-200"
+                />
+              ) : (
+                <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-primary)] text-xl font-bold text-white">
+                  {initial(selected.khach_hang)}
+                </span>
+              )}
+              <div>
+                <p className="text-lg font-bold text-gray-800">
+                  {selected.khach_hang}
+                </p>
+                <span
+                  className={`mt-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                    STATUS_CLASS[selected.status] || "bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  {STATUS_LABEL[selected.status] || selected.status}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-3 text-sm">
+              <InfoRow label="Số điện thoại" value={selected.so_dien_thoai} />
+              <InfoRow label="Email" value={selected.email} />
+              <InfoRow label="Thành phố" value={selected.thanh_pho} />
+              <InfoRow label="Địa chỉ" value={selected.dia_chi} />
+              <InfoRow
+                label="Lịch hẹn"
+                value={`${selected.appointment_date} · ${selected.start_time} - ${selected.end_time}`}
+              />
+              <InfoRow
+                label="Ghi chú của khách"
+                value={selected.customer_note}
+              />
+              {selected.status === "cancelled" && (
+                <InfoRow label="Lý do hủy" value={selected.cancel_reason} />
+              )}
+            </div>
+
+            <button
+              onClick={() => setSelected(null)}
+              className="mt-6 w-full rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white hover:brightness-110"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Một dòng thông tin trong popup (nhãn + giá trị)
+function InfoRow({ label, value }) {
+  return (
+    <div className="flex gap-3">
+      <span className="w-32 shrink-0 text-gray-500">{label}:</span>
+      <span className="text-gray-800">{value || "—"}</span>
     </div>
   );
 }

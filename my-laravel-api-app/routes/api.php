@@ -17,6 +17,8 @@ use App\Http\Controllers\Api\Lawyer\AppointmentController as LawyerAppointmentCo
 use App\Http\Controllers\Api\Customer\AppointmentController as CustomerAppointmentController;
 use App\Http\Controllers\Api\Customer\NotificationController as CustomerNotificationController;
 use App\Http\Controllers\Api\Customer\ProfileController as CustomerProfileController;
+use App\Http\Controllers\Api\Admin\SpecializationController as AdminSpecializationController;
+
 
 // ---------- API công khai (không cần đăng nhập) ----------
 Route::get('/cities', [PublicController::class, 'cities']);
@@ -64,6 +66,12 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::get('/appointments', [AdminAppointmentController::class, 'index']);
     Route::get('/appointments/{appointment}', [AdminAppointmentController::class, 'show']);
     Route::patch('/appointments/{appointment}/cancel', [AdminAppointmentController::class, 'cancel']);
+    // Quản lý lĩnh vực hành nghề
+    Route::get('/specializations', [AdminSpecializationController::class, 'index']);
+    Route::post('/specializations', [AdminSpecializationController::class, 'store']);
+    Route::put('/specializations/{specialization}', [AdminSpecializationController::class, 'update']);
+    Route::delete('/specializations/{specialization}', [AdminSpecializationController::class, 'destroy']);
+    
 });
 
 // ---------- Khu vực LAWYER ----------
@@ -71,11 +79,13 @@ Route::middleware(['auth:sanctum', 'role:lawyer'])->prefix('lawyer')->group(func
     Route::get('/dashboard', [LawyerDashboardController::class, 'index']);
     Route::get('/profile', [LawyerProfileController::class, 'show']);
     Route::put('/profile', [LawyerProfileController::class, 'update']);
+    Route::post('/profile/avatar', [LawyerProfileController::class, 'uploadAvatar']);
     Route::get('/availabilities/slots', [LawyerAvailabilityController::class, 'availableSlots']); // đặt TRƯỚC {availability}
     Route::get('/availabilities', [LawyerAvailabilityController::class, 'index']);
     Route::post('/availabilities', [LawyerAvailabilityController::class, 'store']);
     Route::put('/availabilities/{availability}', [LawyerAvailabilityController::class, 'update']);
     Route::delete('/availabilities/{availability}', [LawyerAvailabilityController::class, 'destroy']);
+    
     // Lịch hẹn của luật sư
     Route::get('/appointments', [LawyerAppointmentController::class, 'index']);
     Route::patch('/appointments/{appointment}/confirm', [LawyerAppointmentController::class, 'confirm']);
@@ -99,4 +109,5 @@ Route::middleware(['auth:sanctum', 'role:customer'])->prefix('customer')->group(
     // Hồ sơ cá nhân
     Route::get('/profile', [CustomerProfileController::class, 'show']);
     Route::put('/profile', [CustomerProfileController::class, 'update']);
+    Route::post('/profile/avatar', [CustomerProfileController::class, 'uploadAvatar']);
 });

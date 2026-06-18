@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import api from '../../api/axios'
 import CustomerNav from '../../components/customer/CustomerNav'
 import Field from '../../components/common/Field'
@@ -23,6 +23,12 @@ export default function Profile() {
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
 
+  // Ảnh đại diện
+  const [avatar, setAvatar] = useState(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [avatarError, setAvatarError] = useState('')
+  const fileInputRef = useRef(null)
+
   useEffect(() => {
     api.get('/cities').then((res) => setCities(res.data)).catch(() => {})
 
@@ -37,6 +43,7 @@ export default function Profile() {
           city_id: p.city_id || '',
           address: p.address || '',
         })
+        setAvatar(p.avatar || null)
       })
       .catch(() => setError('Không tải được hồ sơ.'))
       .finally(() => setLoading(false))
@@ -51,6 +58,28 @@ export default function Profile() {
   function set(key, value) {
     setForm((f) => ({ ...f, [key]: value }))
     setSaved(false)
+  }
+
+  // Chọn ảnh xong là upload luôn.
+  async function handleAvatarChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setAvatarError('')
+    setUploadingAvatar(true)
+    try {
+      const data = new FormData()
+      data.append('avatar', file)
+      const res = await api.post('/customer/profile/avatar', data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      setAvatar(res.data.avatar)
+      updateProfile({ avatar: res.data.avatar }) // đồng bộ avatar lên header
+    } catch (err) {
+      setAvatarError(err.response?.data?.message || 'Tải ảnh lên không thành công.')
+    } finally {
+      setUploadingAvatar(false)
+      if (fileInputRef.current) fileInputRef.current.value = '' // cho phép chọn lại cùng 1 ảnh
+    }
   }
 
   async function handleSubmit(e) {
@@ -90,6 +119,40 @@ export default function Profile() {
           {/* Form thông tin */}
           <section className="rounded-xl border border-gray-200 bg-white p-6">
             <h2 className="font-bold text-gray-800">Thông tin cá nhân</h2>
+
+            {/* Ảnh đại diện */}
+            <div className="mt-4 flex items-center gap-4">
+              {avatar ? (
+                <img
+                  src={avatar}
+                  alt="Ảnh đại diện"
+                  className="h-20 w-20 rounded-full object-cover ring-2 ring-gray-100"
+                />
+              ) : (
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[var(--color-primary)] text-2xl font-bold text-white">
+                  {(form.name || '?').trim().charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingAvatar}
+                  className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {uploadingAvatar ? 'Đang tải…' : 'Đổi ảnh'}
+                </button>
+                <p className="mt-1 text-xs text-gray-400">JPG, PNG, WEBP · tối đa 2MB</p>
+                {avatarError && <p className="mt-1 text-xs text-red-600">{avatarError}</p>}
+              </div>
+            </div>
 
             {saved && (
               <p className="mt-3 rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">

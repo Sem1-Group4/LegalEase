@@ -32,7 +32,7 @@ class AppointmentController extends Controller
         $profile = $this->profileOrFail($request);
 
         $query = Appointment::where('lawyer_profile_id', $profile->id)
-            ->with(['customer.user:id,name,phone'])
+            ->with(['customer.user:id,name,phone,email', 'customer.city:id,name'])
             ->orderByDesc('appointment_date')
             ->orderByDesc('start_time');
 
@@ -46,6 +46,10 @@ class AppointmentController extends Controller
             'id'               => $a->id,
             'khach_hang'       => $a->customer?->user?->name,
             'so_dien_thoai'    => $a->customer?->user?->phone,
+            'email'            => $a->customer?->user?->email,
+            'avatar'           => $a->customer?->avatar ? asset('storage/' . $a->customer->avatar) : null,
+            'dia_chi'          => $a->customer?->address,
+            'thanh_pho'        => $a->customer?->city?->name,
             'appointment_date' => $a->appointment_date?->toDateString(),
             'start_time'       => substr($a->start_time, 0, 5),
             'end_time'         => substr($a->end_time, 0, 5),

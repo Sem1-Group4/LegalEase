@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Lawyer;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Luật sư quản lý hồ sơ của chính mình.
@@ -37,6 +38,7 @@ class ProfileController extends Controller
             'approval_status'  => $profile->approval_status,
             'is_verified'      => $profile->is_verified,
             'rating_avg'       => $profile->rating_avg,
+            'avatar'           => $profile->avatar ? asset('storage/' . $profile->avatar) : null,
             'specializations'  => $profile->specializations->map(fn ($s) => [
                 'id'   => $s->id,
                 'name' => $s->name,
@@ -77,6 +79,38 @@ class ProfileController extends Controller
         return response()->json([
             'message' => 'Đã cập nhật hồ sơ.',
             'data'    => $this->show($request),
+        ]);
+    }
+
+    /**
+     * POST /api/lawyer/profile/avatar
+     * Tải lên ảnh đại diện của luật sư.
+     */
+    public function uploadAvatar(Request $request)
+    {
+        $profile = $request->user()->lawyerProfile;
+
+        if (! $profile) {
+            return response()->json(['message' => 'Chưa có hồ sơ luật sư.'], 404);
+        }
+
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,jpg,png,webp|max:2048', // tối đa 2MB
+        ]);
+
+        // Xóa ảnh cũ nếu có
+        if ($profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
+            Storage::disk('public')->delete($profile->avatar);
+        }
+
+        // Lưu ảnh mới vào storage/app/public/avatars
+        $path = $request->file('avatar')->store('avatars', 'public');
+
+        $profile->update(['avatar' => $path]);
+
+        return response()->json([
+            'message' => 'Đã cập nhật ảnh đại diện.',
+            'avatar'  => asset('storage/' . $path),
         ]);
     }
 }
