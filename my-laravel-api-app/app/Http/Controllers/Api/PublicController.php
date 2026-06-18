@@ -165,6 +165,7 @@ class PublicController extends Controller
                 'id'           => $a->id,
                 'title'        => $a->title,
                 'excerpt'      => Str::limit(strip_tags($a->content), 140),
+                'image'        => $this->firstImage($a->content),
                 'published_at' => $a->published_at?->toDateString(),
             ]);
     }
@@ -187,6 +188,16 @@ class PublicController extends Controller
             'author'       => $announcement->author?->name,
             'published_at' => $announcement->published_at?->toDateString(),
         ];
+    }
+
+    /** Lấy URL ảnh đầu tiên trong nội dung HTML của bài viết (null nếu không có). */
+    private function firstImage(?string $html): ?string
+    {
+        if (! $html) {
+            return null;
+        }
+
+        return preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $html, $m) ? $m[1] : null;
     }
 
     /** Định dạng card luật sư cho danh sách. */

@@ -51,9 +51,12 @@ export default function NewsDetail() {
           Đăng ngày {article.published_at}{article.author ? ` · ${article.author}` : ''}
         </p>
 
-        <div className="mt-6 flex h-52 items-center justify-center rounded-xl bg-blue-50 text-6xl">📰</div>
-
-        <p className="mt-6 whitespace-pre-line leading-relaxed text-gray-700">{article.content}</p>
+        {/* Nội dung HTML do admin nhập (Quill). Render bằng dangerouslySetInnerHTML —
+            nội dung do admin (người tin cậy) tạo nên rủi ro XSS thấp. */}
+        <div
+          className="article-content mt-6"
+          dangerouslySetInnerHTML={{ __html: article.content || '' }}
+        />
       </article>
 
       {related.length > 0 && (

@@ -33,14 +33,22 @@ export default function News() {
             <Link
               key={n.id}
               to={`/tin-tuc/${n.id}`}
-              className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition hover:-translate-y-1 hover:shadow-md"
+              className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition hover:-translate-y-1 hover:border-[var(--color-primary)] hover:shadow-md"
             >
-              <div className="flex h-40 items-center justify-center bg-blue-50 text-5xl">📰</div>
+              {n.image ? (
+                <img
+                  src={n.image}
+                  alt={n.title}
+                  className="h-40 w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-40 items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 text-5xl">📰</div>
+              )}
               <div className="flex flex-1 flex-col p-5">
-                <h2 className="font-bold text-gray-800">{n.title}</h2>
-                <p className="mt-2 flex-1 text-sm text-gray-500">{n.excerpt}</p>
-                <div className="mt-3 flex items-center justify-between text-xs text-gray-400">
-                  <span>{n.published_at}</span>
+                <h2 className="line-clamp-2 font-bold text-gray-800">{n.title}</h2>
+                <p className="mt-2 line-clamp-3 flex-1 text-sm text-gray-500">{n.excerpt}</p>
+                <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 text-xs text-gray-400">
+                  <span>📅 {n.published_at}</span>
                   <span className="font-semibold text-[var(--color-primary)]">Đọc tiếp →</span>
                 </div>
               </div>

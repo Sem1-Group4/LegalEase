@@ -18,3 +18,73 @@ body {
   color: #1f2937;
   background: #f9fafb;
 }
+
+/* Nội dung bài viết tin tức (HTML do admin nhập bằng trình soạn thảo Quill).
+   Style đúng bộ định dạng toolbar admin: heading 2/3, đậm/nghiêng/gạch,
+   danh sách, link, ảnh. */
+.article-content {
+  color: #374151;
+  line-height: 1.75;
+  font-size: 1rem;
+}
+.article-content > :first-child {
+  margin-top: 0;
+}
+.article-content h2 {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+.article-content h3 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+.article-content p {
+  margin: 0.75rem 0;
+}
+.article-content ul,
+.article-content ol {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+}
+.article-content ul {
+  list-style: disc;
+}
+.article-content ol {
+  list-style: decimal;
+}
+.article-content li {
+  margin: 0.25rem 0;
+}
+.article-content a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+.article-content a:hover {
+  filter: brightness(1.2);
+}
+.article-content strong {
+  font-weight: 700;
+}
+.article-content em {
+  font-style: italic;
+}
+.article-content u {
+  text-decoration: underline;
+}
+.article-content blockquote {
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  border-left: 4px solid var(--color-accent);
+  background: #f9fafb;
+  color: #4b5563;
+}
+.article-content img {
+  max-width: 100%;
+  height: auto;
+  margin: 1rem 0;
+  border-radius: 0.75rem;
+}
