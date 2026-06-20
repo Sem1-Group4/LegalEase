@@ -30,7 +30,7 @@ class PublicController extends Controller
     }
 
     /**
-     * Danh sách luật sư (đã duyệt). Hỗ trợ:
+     * Danh sách luật sư (đã duyệt + tài khoản đang hoạt động). Hỗ trợ:
      * - ?featured=1          -> chỉ luật sư nổi bật (trang chủ, lấy 12 cái đầu)
      * - ?q=                  -> tìm theo tên luật sư
      * - ?city_id=            -> lọc theo thành phố
@@ -43,6 +43,7 @@ class PublicController extends Controller
     {
         $query = LawyerProfile::query()
             ->where('approval_status', 'approved')
+            ->whereHas('user', fn ($u) => $u->where('status', 'active'))
             ->with(['user:id,name,phone', 'city:id,name', 'specializations:id,name'])
             ->withCount('reviews');
 
@@ -74,11 +75,11 @@ class PublicController extends Controller
     }
 
     /**
-     * GET /api/lawyers/{lawyer} — chi tiết 1 luật sư (đã duyệt) kèm vài review gần nhất.
+     * GET /api/lawyers/{lawyer} — chi tiết 1 luật sư (đã duyệt + đang hoạt động) kèm vài review gần nhất.
      */
     public function show(LawyerProfile $lawyer)
     {
-        if ($lawyer->approval_status !== 'approved') {
+        if ($lawyer->approval_status !== 'approved' || $lawyer->user?->status !== 'active') {
             abort(404, 'Không tìm thấy luật sư.');
         }
 
@@ -121,7 +122,7 @@ class PublicController extends Controller
      */
     public function slots(Request $request, LawyerProfile $lawyer, AvailabilityService $availability)
     {
-        if ($lawyer->approval_status !== 'approved') {
+        if ($lawyer->approval_status !== 'approved' || $lawyer->user?->status !== 'active') {
             abort(404, 'Không tìm thấy luật sư.');
         }
 
@@ -142,7 +143,7 @@ class PublicController extends Controller
      */
     public function reviews(Request $request, LawyerProfile $lawyer)
     {
-        if ($lawyer->approval_status !== 'approved') {
+        if ($lawyer->approval_status !== 'approved' || $lawyer->user?->status !== 'active') {
             abort(404, 'Không tìm thấy luật sư.');
         }
 
